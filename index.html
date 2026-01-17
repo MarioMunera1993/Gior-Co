@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario y Ventas de Ropa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="./src/css/index.css">
+</head>
+
+<body class="min-h-screen font-sans antialiased transition-colors duration-300">
+
+    <div id="login-modal" class="modal">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl max-w-md w-full">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Inicio de Sesión</h2>
+            <p class="mb-6 text-gray-600 dark:text-gray-400">Ingrese la contraseña para acceder al sistema.</p>
+
+            <form id="form-login" class="space-y-4">
+                <div>
+                    <label for="password-input"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</label>
+                    <input type="password" id="password-input" required placeholder="Ingrese su contraseña"
+                        class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <button type="submit"
+                    class="w-full py-3 rounded-lg shadow-md font-semibold transition duration-200 bg-blue-600 hover:bg-blue-700 text-white">
+                    Acceder
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="edit-modal" class="modal hidden">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl max-w-lg w-full">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Editar Producto</h2>
+
+            <form id="form-editar-producto" class="space-y-4">
+                <input type="hidden" id="edit-id">
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit-codigo"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Código</label>
+                        <input type="text" id="edit-codigo" disabled
+                            class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600">
+                    </div>
+                    <div>
+                        <label for="edit-talla"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Talla</label>
+                        <select id="edit-talla" required
+                            class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Seleccionar Talla</option>
+                            <optgroup label="Ropa">
+                                <option>XS</option>
+                                <option>S</option>
+                                <option>M</option>
+                                <option>L</option>
+                                <option>XL</option>
+                                <option>U</option>
+                            </optgroup>
+                            <optgroup label="Calzado (EU)">
+                                <option>32</option>
+                                <option>33</option>
+                                <option>34</option>
+                                <option>35</option>
+                                <option>36</option>
+                                <option>37</option>
+                                <option>38</option>
+                                <option>39</option>
+                                <option>40</option>
+                                <option>41</option>
+                                <option>42</option>
+                                <option>43</option>
+                                <option>44</option>
+                                <option>45</option>
+                                <option>46</option>
+                                <option>47</option>
+                                <option>48</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="edit-nombre"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre</label>
+                    <input type="text" id="edit-nombre" required
+                        class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit-color"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Color</label>
+                        <input type="text" id="edit-color" required
+                            class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="edit-precio"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Precio ($)</label>
+                        <input type="number" id="edit-precio" min="0" step="0.01" required
+                            class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="edit-cantidad"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cantidad (Stock)</label>
+                    <input type="number" id="edit-cantidad" min="0" required
+                        class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="hideEditModal()"
+                        class="py-2 px-4 rounded-lg shadow-md font-semibold transition duration-200 bg-gray-300 hover:bg-gray-400 text-gray-800 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                        class="py-2 px-4 rounded-lg shadow-md font-semibold transition duration-200 bg-blue-600 hover:bg-blue-700 text-white">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="notificaciones" class="notificaciones"></div>
+
+    <header class="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-extrabold text-blue-600 dark:text-blue-400">GIOR & CO.</h1>
+            <div class="flex items-center space-x-4">
+                <span id="current-user-info" class="text-sm font-semibold text-gray-700 dark:text-gray-300"></span>
+                <div class="switch select-none flex items-center p-2 rounded-full cursor-pointer bg-gray-100 dark:bg-gray-700"
+                    id="toggle-dark" title="Modo oscuro">
+                    <span
+                        class="dot w-4 h-4 rounded-full bg-blue-500 dark:bg-yellow-400 mr-2 transition-all duration-300"></span>
+                    <span id="dark-mode-label" class="text-sm font-medium text-gray-700 dark:text-gray-300">Dark</span>
+                </div>
+                <button onclick="showLoginModal()"
+                    class="py-1 px-3 bg-gray-200 dark:bg-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 transition">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+
+        <nav class="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-4">
+                <button id="tab-inventario" data-tab="inventario"
+                    class="tab-button py-3 px-4 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition duration-150 ease-in-out border-b-4 border-transparent tab-active">
+                    📦 Inventario
+                </button>
+                <button id="tab-ventas" data-tab="ventas"
+                    class="tab-button py-3 px-4 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition duration-150 ease-in-out border-b-4 border-transparent">
+                    💰 Registro de Ventas
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main id="app-content" class="p-4 md:p-8 space-y-8 hidden">
+
+        <div id="module-inventario" class="tab-content max-w-7xl mx-auto space-y-8">
+
+            <section id="dashboard" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div
+                    class="card bg-white dark:bg-gray-700 p-5 rounded-xl shadow-lg border-b-4 border-blue-500 dark:border-blue-400">
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-300">Total de productos</h3>
+                    <p id="stat-total" class="text-3xl font-bold mt-1 text-gray-800 dark:text-white">0</p>
+                </div>
+
+                <div
+                    class="card bg-white dark:bg-gray-700 p-5 rounded-xl shadow-lg border-b-4 border-red-500 dark:border-red-400">
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-300">Productos agotados</h3>
+                    <p id="stat-agotados" class="text-3xl font-bold mt-1 text-gray-800 dark:text-white">0</p>
+                </div>
+
+                <div
+                    class="card bg-white dark:bg-gray-700 p-5 rounded-xl shadow-lg border-b-4 border-amber-500 dark:border-amber-400">
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-300">Stock bajo (&le; 5)</h3>
+                    <p id="stat-bajo" class="text-3xl font-bold mt-1 text-gray-800 dark:text-white">0</p>
+                </div>
+
+                <div
+                    class="card bg-white dark:bg-gray-700 p-5 rounded-xl shadow-lg border-b-4 border-emerald-500 dark:border-emerald-400">
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-300">Valor total inventario</h3>
+                    <p id="stat-valor" class="text-3xl font-bold mt-1 text-gray-800 dark:text-white">$0</p>
+                </div>
+            </section>
+
+            <div id="inventory-charts-section" class="charts grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+                <div class="chart-card bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
+                    <h4 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Estado de stock</h4>
+                    <div style="height:250px;">
+                        <canvas id="chart-stock-pie"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
+                    <h4 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Top 5 Productos Más Vendidos
+                        (Stock Actual)</h4>
+                    <div style="height:250px;">
+                        <canvas id="chart-top-bar"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <section id="add-product-section" class="form-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
+                <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Agregar Producto</h2>
+                <form id="form-producto" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <input type="text" id="codigo" required placeholder="Código"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <input type="text" id="nombre" required placeholder="Nombre"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <select id="talla" required
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                        <option value="">Talla</option>
+                        <optgroup label="Ropa">
+                            <option>XS</option>
+                            <option>S</option>
+                            <option>M</option>
+                            <option>L</option>
+                            <option>XL</option>
+                            <option>U</option>
+                        </optgroup>
+                        <optgroup label="Calzado (EU)">
+                            <option>32</option>
+                            <option>33</option>
+                            <option>34</option>
+                            <option>35</option>
+                            <option>36</option>
+                            <option>37</option>
+                            <option>38</option>
+                            <option>39</option>
+                            <option>40</option>
+                            <option>41</option>
+                            <option>42</option>
+                            <option>43</option>
+                            <option>44</option>
+                            <option>45</option>
+                            <option>46</option>
+                            <option>47</option>
+                            <option>48</option>
+                        </optgroup>
+                    </select>
+                    <input type="text" id="color" required placeholder="Color"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <input type="number" id="cantidad" min="1" required placeholder="Cantidad"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <input type="number" id="precio" min="0" step="0.01" required placeholder="Precio ($)"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <div class="sm:col-span-3 pt-2">
+                        <button type="submit"
+                            class="btn-agregar w-full py-2 px-4 rounded-md shadow-md text-white bg-blue-600 hover:bg-blue-700 transition">
+                            Agregar Producto
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="filtros-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
+                <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Filtros de Inventario</h2>
+                <div class="filtro-buscar mb-4">
+                    <input type="search" id="buscar" placeholder="Buscar por código o nombre..."
+                        class="w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                </div>
+
+                <div class="filtro-controles grid grid-cols-2 md:grid-cols-6 gap-4 items-end">
+                    <select id="filtro-talla"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                        <option value="">Talla</option>
+                        <optgroup label="Ropa">
+                            <option value="XS">XS</option>
+                            <option value="S">S</option>
+                            <option value="M">M</option>
+                            <option value="L">L</option>
+                            <option value="XL">XL</option>
+                            <option value="U">U</option>
+                        </optgroup>
+                        <optgroup label="Calzado (EU)">
+                            <option value="32">32</option>
+                            <option value="33">33</option>
+                            <option value="34">34</option>
+                            <option value="35">35</option>
+                            <option value="36">36</option>
+                            <option value="37">37</option>
+                            <option value="38">38</option>
+                            <option value="39">39</option>
+                            <option value="40">40</option>
+                            <option value="41">41</option>
+                            <option value="42">42</option>
+                            <option value="43">43</option>
+                            <option value="44">44</option>
+                            <option value="45">45</option>
+                            <option value="46">46</option>
+                            <option value="47">47</option>
+                            <option value="48">48</option>
+                        </optgroup>
+                    </select>
+                    <input type="text" id="filtro-color" placeholder="Color"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                    <select id="filtro-stock"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                        <option value="">Stock</option>
+                        <option value="agotado">Agotado</option>
+                        <option value="bajo">Bajo</option>
+                        <option value="ok">OK</option>
+                    </select>
+                    <input type="number" id="filtro-precio-min" min="0" placeholder="Precio min"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                    <input type="number" id="filtro-precio-max" min="0" placeholder="Precio max"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                    <button id="limpiar-filtros"
+                        class="btn-limpiar w-full py-2 px-4 rounded-md shadow-md text-white bg-gray-500 hover:bg-gray-600 transition">
+                        Limpiar
+                    </button>
+                </div>
+            </section>
+
+            <section class="tabla-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg overflow-x-auto">
+                <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Lista de Inventario</h2>
+                <table id="tabla-inventario" class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                    <thead class="bg-gray-50 dark:bg-gray-800">
+                        <tr>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Código</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Nombre</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Talla</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Color</th>
+                            <th
+                                class="px-6 py-3 text-right text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Cantidad</th>
+                            <th
+                                class="px-6 py-3 text-right text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Precio</th>
+                            <th id="acciones-header"
+                                class="px-6 py-3 text-center text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-700 divide-y divide-gray-200 dark:divide-gray-600">
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
+        <div id="module-ventas" class="tab-content hidden max-w-7xl mx-auto space-y-8">
+
+            <section class="form-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
+                <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Registrar Nueva Venta</h2>
+
+                <form id="form-venta" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="venta-producto"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Producto (Código -
+                                Nombre)</label>
+                            <select id="venta-producto" required
+                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                                <option value="">Seleccione un producto</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="venta-cantidad"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cantidad</label>
+                            <input type="number" id="venta-cantidad" min="1" value="1" required
+                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                        </div>
+
+                        <div>
+                            <label for="venta-precio-final"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Precio Unitario Final
+                                ($)</label>
+                            <input type="number" id="venta-precio-final" min="0" step="0.01" required
+                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="venta-detalle"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Detalle de la Venta
+                            (Cliente, Descuento, etc.)</label>
+                        <input type="text" id="venta-detalle" placeholder="Ej: Cliente Juan Pérez, 10% descuento"
+                            class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit"
+                            class="w-full py-2 px-4 rounded-md shadow-md text-white bg-emerald-600 hover:bg-emerald-700 transition">
+                            Confirmar Venta y Descontar Stock
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <section id="sales-dashboard-section" class="dashboard-ventas grid grid-cols-2 lg:grid-cols-4 gap-4 hidden">
+                <div
+                    class="card bg-white dark:bg-gray-700 p-5 rounded-xl shadow-lg border-b-4 border-emerald-500 dark:border-emerald-400">
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-300">Ventas Totales (#)</h3>
+                    <p id="stat-ventas-total" class="text-3xl font-bold mt-1 text-gray-800 dark:text-white">0</p>
+                </div>
+                <div
+                    class="card bg-white dark:bg-gray-700 p-5 rounded-xl shadow-lg border-b-4 border-emerald-700 dark:border-emerald-500">
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-300">Ingreso Total ($)</h3>
+                    <p id="stat-ingreso-total" class="text-3xl font-bold mt-1 text-gray-800 dark:text-white">$0.00</p>
+                </div>
+                <div
+                    class="card bg-white dark:bg-gray-700 p-5 rounded-xl shadow-lg border-b-4 border-yellow-500 dark:border-yellow-400">
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-300">Ventas de Hoy</h3>
+                    <p id="stat-ventas-hoy" class="text-3xl font-bold mt-1 text-gray-800 dark:text-white">0</p>
+                </div>
+                <div
+                    class="card bg-white dark:bg-gray-700 p-5 rounded-xl shadow-lg border-b-4 border-yellow-700 dark:border-yellow-500">
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-300">Ingreso de Hoy ($)</h3>
+                    <p id="stat-ingreso-hoy" class="text-3xl font-bold mt-1 text-gray-800 dark:text-white">$0.00</p>
+                </div>
+            </section>
+
+            <div id="sales-charts-section" class="charts grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+
+                <div class="chart-card bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
+                    <h4 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Top 5 Productos más Vendidos
+                        (Unidades)</h4>
+                    <div style="height:250px;">
+                        <canvas id="chart-sales-top-products"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
+                    <h4 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Distribución de Ingresos por
+                        Mes</h4>
+                    <div style="height:250px;">
+                        <canvas id="chart-sales-monthly-revenue"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <section class="tabla-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg overflow-x-auto">
+                <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Historial de Ventas</h2>
+                <table id="tabla-ventas" class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                    <thead class="bg-gray-50 dark:bg-gray-800">
+                        <tr>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Fecha</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Código/Producto</th>
+                            <th
+                                class="px-6 py-3 text-right text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Cantidad</th>
+                            <th
+                                class="px-6 py-3 text-right text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Precio Unitario</th>
+                            <th
+                                class="px-6 py-3 text-right text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Total Venta</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Detalle</th>
+                            <th id="acciones-ventas-header"
+                                class="px-6 py-3 text-center text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-700 divide-y divide-gray-200 dark:divide-gray-600">
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
+    </main>
+    <script src="./src/js/index.js"></script>
+
+</body>
+
+</html>
