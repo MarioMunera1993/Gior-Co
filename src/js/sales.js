@@ -1,4 +1,14 @@
-// Sales Module - Gestión de ventas
+/**
+ * MÓDULO DE VENTAS
+ * ================
+ * Gestiona el registro de ventas
+ * - Registrar nuevas ventas de productos
+ * - Actualizar inventario automáticamente
+ * - Calcular totales de ventas
+ * - Mostrar historial de ventas con detalles
+ * - Eliminar registros de ventas
+ */
+
 const Sales = {
   updateDashboard() {
     try {

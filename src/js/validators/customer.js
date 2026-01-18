@@ -1,4 +1,12 @@
-// Customer Validators - Validación de datos de clientes
+/**
+ * VALIDADOR DE CLIENTES
+ * ====================
+ * Valida datos de clientes
+ * - Validación de apellidos, nombre, teléfono, correo, dirección
+ * - Formatos específicos para teléfono y correo
+ * - Retorna array de errores descriptivos en español
+ */
+
 const CustomerValidator = {
   // Validar cliente
   validateCustomer(primerApellido, segundoApellido, nombre, telefono, correo, direccion) {

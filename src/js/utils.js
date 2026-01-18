@@ -1,5 +1,14 @@
-// Utils Module - Funciones utilitarias
+/**
+ * MÓDULO DE UTILIDADES
+ * ====================
+ * Funciones reutilizables en toda la aplicación
+ * - Formateo de moneda y fechas
+ * - Cálculo de estado de stock
+ * - Generación de IDs únicos
+ */
+
 const Utils = {
+  // Convertir número a formato de moneda colombiana
   formatCurrency(value) {
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
@@ -7,6 +16,7 @@ const Utils = {
     }).format(value);
   },
 
+  // Formatear fecha ISO a formato legible en español
   formatDate(isoString) {
     if (!isoString || isoString.startsWith("Invalid")) {
       return "Fecha no válida";
@@ -29,6 +39,7 @@ const Utils = {
     }
   },
 
+  // Determinar estado de stock (OK, Bajo, Agotado) con estilos y filtro
   getStockStatus(cantidad) {
     if (cantidad === 0)
       return {
@@ -51,6 +62,7 @@ const Utils = {
     };
   },
 
+  // Generar ID único usando crypto API del navegador
   generateId() {
     return crypto.randomUUID();
   },

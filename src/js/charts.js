@@ -1,4 +1,13 @@
-// Charts Module - Gráficos y visualización de datos
+/**
+ * MÓDULO DE GRÁFICOS
+ * ==================
+ * Crea y gestiona visualizaciones de datos
+ * - Gráficos de inventario (productos, valor total, stock bajo)
+ * - Gráficos de ventas (total, productos vendidos, ingresos hoy)
+ * - Gráficos de clientes y proveedores (conteos)
+ * - Usa Chart.js v4.4.3 para renderizado
+ */
+
 const Charts = {
   charts: {},
 
@@ -236,6 +245,16 @@ const Charts = {
       // Ejemplo: distribución geográfica, clientes recientes, etc.
     } catch (error) {
       console.error("Error initializing customers charts:", error);
+    }
+  },
+
+  initSuppliersCharts() {
+    try {
+      if (!Auth.isAdmin()) return;
+      // Placeholder para gráficos de proveedores en el futuro
+      // Ejemplo: productos por proveedor, análisis de precios, etc.
+    } catch (error) {
+      console.error("Error initializing suppliers charts:", error);
     }
   },
 };

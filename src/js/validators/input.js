@@ -1,4 +1,12 @@
-// Input Validators - Validación de entrada de datos
+/**
+ * VALIDADOR DE ENTRADA - PRODUCTOS Y VENTAS
+ * ==========================================
+ * Valida datos de formularios
+ * - Validación de productos (código, nombre, talla, color, cantidad, precio)
+ * - Validación de ventas (producto seleccionado, cantidad, precio)
+ * - Retorna array de errores descriptivos en español
+ */
+
 const InputValidator = {
   // Validar producto
   validateProduct(codigo, nombre, talla, color, cantidad, precio) {

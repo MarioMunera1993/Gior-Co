@@ -1,4 +1,13 @@
-// Inventory Module - Gestión de inventario
+/**
+ * MÓDULO DE INVENTARIO
+ * ====================
+ * Gestiona el registro de productos
+ * - Agregar productos (código, nombre, talla, color, cantidad, precio)
+ * - Editar y eliminar productos
+ * - Búsqueda y filtrado de productos
+ * - Estadísticas de inventario (total productos, valor total, stock bajo)
+ */
+
 const Inventory = {
   loadAndRefreshUI() {
     this.updateStats();

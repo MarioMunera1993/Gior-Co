@@ -1,4 +1,13 @@
-// Customers Module - Gestión de clientes
+/**
+ * MÓDULO DE GESTIÓN DE CLIENTES
+ * =============================
+ * Gestiona el registro de clientes
+ * - Agregar clientes (nombre, apellidos, teléfono, correo, dirección)
+ * - Editar y eliminar clientes
+ * - Búsqueda y filtrado de clientes
+ * - Estadísticas de clientes (total registrados)
+ */
+
 const Customers = {
   loadAndRefreshUI() {
     this.updateStats();

@@ -1,8 +1,19 @@
+/**
+ * ESTILOS PERSONALIZADOS
+ * =====================
+ * Estilos CSS que complementan Tailwind CSS
+ * - Variables de colores personalizados
+ * - Tema oscuro y claro
+ * - Estilos para modales, tarjetas y animaciones
+ */
+
+/* Variables de colores principales */
 :root {
     --color-primary: #3b82f6;
     --color-secondary: #10b981;
 }
 
+/* Tema oscuro: colores de fondo y texto */
 .dark {
     --bg-color: #1f2937;
     --text-color: #f3f4f6;
@@ -11,6 +22,7 @@
     --border-color: #4b5563;
 }
 
+/* Estilos generales de HTML - transición suave entre temas */
 html {
     transition: background-color 0.3s, color 0.3s;
     background-color: #f3f4f6;
@@ -22,12 +34,14 @@ html {
     color: var(--text-color);
 }
 
+/* Estilo para pestaña activa */
 .tab-active {
     border-bottom: 4px solid var(--color-primary);
     color: var(--color-primary);
     font-weight: 600;
 }
 
+/* Estilos para modales - ventanas flotantes */
 .modal {
     position: fixed;
     top: 0;
@@ -41,6 +55,7 @@ html {
     z-index: 50;
 }
 
+/* Contenedor para notificaciones en la esquina superior derecha */
 #notificaciones {
     position: fixed;
     top: 20px;
@@ -49,6 +64,7 @@ html {
     max-width: 300px;
 }
 
+/* Estilo individual de notificaciones (éxito, error, advertencia) */
 .notificacion-item {
     padding: 12px 20px;
     margin-bottom: 10px;
@@ -57,6 +73,7 @@ html {
     transition: opacity 0.5s ease-out;
 }
 
+/* Colores de notificaciones */
 .bg-success {
     background-color: #10b981;
     color: white;
@@ -72,6 +89,7 @@ html {
     color: white;
 }
 
+/* Responsive - adaptación para pantallas pequeñas */
 @media (max-width: 768px) {
 
     .tabla-container table,

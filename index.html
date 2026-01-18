@@ -2,16 +2,24 @@
 <html lang="es">
 
 <head>
+    <!-- Meta información y configuración de la página -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario y Ventas de Ropa</title>
+    
+    <!-- Librerías externas: Tailwind CSS y Chart.js -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    
+    <!-- Estilos personalizados -->
     <link rel="stylesheet" href="./src/css/index.css">
 </head>
 
 <body class="min-h-screen font-sans antialiased transition-colors duration-300">
 
+    <!-- ============================================ -->
+    <!-- MODAL DE LOGIN -->
+    <!-- ============================================ -->
     <div id="login-modal" class="modal">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl max-w-md w-full">
             <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Inicio de Sesión</h2>
@@ -32,6 +40,9 @@
         </div>
     </div>
 
+    <!-- ============================================ -->
+    <!-- MODAL DE EDICIÓN DE PRODUCTOS -->
+    <!-- ============================================ -->
     <div id="edit-modal" class="modal hidden">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl max-w-lg w-full">
             <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Editar Producto</h2>
@@ -161,14 +172,20 @@
                     class="tab-button py-3 px-4 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition duration-150 ease-in-out border-b-4 border-transparent">
                     👥 Gestión de Clientes
                 </button>
+                <button id="tab-proveedores" data-tab="proveedores"
+                    class="tab-button py-3 px-4 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition duration-150 ease-in-out border-b-4 border-transparent">
+                    🏭 Gestión de Proveedores
+                </button>
             </div>
         </nav>
     </header>
 
+    <!-- ============================================ -->
+    <!-- CONTENIDO PRINCIPAL -->
+    <!-- ============================================ -->
     <main id="app-content" class="p-4 md:p-8 space-y-8 hidden">
 
-        <div id="module-inventario" class="tab-content max-w-7xl mx-auto space-y-8">
-
+        <!-- SECCIÓN: MÓDULO DE INVENTARIO -->
             <section id="dashboard" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div
                     class="card bg-white dark:bg-gray-700 p-5 rounded-xl shadow-lg border-b-4 border-blue-500 dark:border-blue-400">
@@ -555,9 +572,182 @@
             </section>
         </div>
 
+        <div id="module-proveedores" class="tab-content max-w-7xl mx-auto space-y-8 hidden">
+
+            <section id="dashboard-proveedores" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div
+                    class="card bg-white dark:bg-gray-700 p-5 rounded-xl shadow-lg border-b-4 border-orange-500 dark:border-orange-400">
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-300">Total de proveedores</h3>
+                    <p id="stat-proveedores-total" class="text-3xl font-bold mt-1 text-gray-800 dark:text-white">0</p>
+                </div>
+            </section>
+
+            <section id="add-supplier-section" class="form-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
+                <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Agregar Proveedor</h2>
+                <form id="form-proveedor" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <input type="text" id="supplier-razon-social" required placeholder="Razón Social"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <input type="text" id="supplier-identificacion" required placeholder="Identificación"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <select id="supplier-tipo-identificacion" required
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                        <option value="">Tipo de Identificación</option>
+                        <option>RUT</option>
+                        <option>NIT</option>
+                        <option>RFC</option>
+                        <option>CURP</option>
+                        <option>CUIT</option>
+                        <option>PAS</option>
+                        <option>OTR</option>
+                    </select>
+                    <input type="text" id="supplier-direccion" required placeholder="Dirección"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <input type="tel" id="supplier-telefono" required placeholder="Teléfono"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <input type="text" id="supplier-nombre-contacto" required placeholder="Nombre del Contacto"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <input type="email" id="supplier-correo" required placeholder="Correo"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <button type="submit"
+                        class="col-span-1 sm:col-span-2 lg:col-span-3 py-2 rounded-md shadow-md font-semibold transition duration-200 bg-orange-600 hover:bg-orange-700 text-white">
+                        Agregar Proveedor
+                    </button>
+                </form>
+            </section>
+
+            <section class="filters-container bg-white dark:bg-gray-700 p-4 rounded-xl shadow-lg">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" id="buscar-proveedores" placeholder="Buscar por razón social, identificación o correo..."
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <button id="limpiar-filtros-proveedores"
+                        class="py-2 rounded-md shadow-md font-semibold transition duration-200 bg-gray-600 hover:bg-gray-700 text-white">
+                        Limpiar Filtros
+                    </button>
+                </div>
+            </section>
+
+            <section class="tabla-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg overflow-x-auto">
+                <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Listado de Proveedores</h2>
+                <table id="tabla-proveedores" class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                    <thead class="bg-gray-50 dark:bg-gray-800">
+                        <tr>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Razón Social</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Identificación</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Contacto</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Teléfono</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Correo</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Dirección</th>
+                            <th
+                                class="px-6 py-3 text-center text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-700 divide-y divide-gray-200 dark:divide-gray-600">
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
     </main>
 
-    <!-- Modal para editar cliente -->
+    <!-- ============================================ -->
+    <!-- MODAL DE EDICIÓN DE PROVEEDORES -->
+    <!-- ============================================ -->
+    <div id="edit-supplier-modal" class="modal hidden">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl max-w-lg w-full">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Editar Proveedor</h2>
+
+            <form id="form-editar-proveedor" class="space-y-4">
+                <input type="hidden" id="edit-supplier-id">
+
+                <div>
+                    <label for="edit-supplier-razon-social"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Razón Social</label>
+                    <input type="text" id="edit-supplier-razon-social" required
+                        class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit-supplier-identificacion"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Identificación</label>
+                        <input type="text" id="edit-supplier-identificacion" required
+                            class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="edit-supplier-tipo-identificacion"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Identificación</label>
+                        <select id="edit-supplier-tipo-identificacion" required
+                            class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                            <option>RUT</option>
+                            <option>NIT</option>
+                            <option>RFC</option>
+                            <option>CURP</option>
+                            <option>CUIT</option>
+                            <option>PAS</option>
+                            <option>OTR</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="edit-supplier-direccion"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Dirección</label>
+                    <input type="text" id="edit-supplier-direccion" required
+                        class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit-supplier-telefono"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Teléfono</label>
+                        <input type="tel" id="edit-supplier-telefono" required
+                            class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="edit-supplier-nombre-contacto"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre del Contacto</label>
+                        <input type="text" id="edit-supplier-nombre-contacto" required
+                            class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="edit-supplier-correo"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Correo</label>
+                    <input type="email" id="edit-supplier-correo" required
+                        class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button type="submit"
+                        class="flex-1 py-3 rounded-lg shadow-md font-semibold transition duration-200 bg-orange-600 hover:bg-orange-700 text-white">
+                        Guardar Cambios
+                    </button>
+                    <button type="button" onclick="hideEditSupplierModal()"
+                        class="flex-1 py-3 rounded-lg shadow-md font-semibold transition duration-200 bg-gray-600 hover:bg-gray-700 text-white">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MODAL DE EDICIÓN DE CLIENTES -->
+    <!-- ============================================ -->
     <div id="edit-customer-modal" class="modal hidden">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl max-w-lg w-full">
             <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Editar Cliente</h2>
@@ -630,6 +820,7 @@
     <!-- Validators -->
     <script src="./src/js/validators/input.js"></script>
     <script src="./src/js/validators/customer.js"></script>
+    <script src="./src/js/validators/supplier.js"></script>
     
     <!-- Feature modules -->
     <script src="./src/js/auth.js"></script>
@@ -637,6 +828,7 @@
     <script src="./src/js/inventory.js"></script>
     <script src="./src/js/sales.js"></script>
     <script src="./src/js/customers.js"></script>
+    <script src="./src/js/suppliers.js"></script>
     <script src="./src/js/charts.js"></script>
     
     <!-- Event handlers -->
@@ -646,6 +838,5 @@
     <script src="./src/js/app.js"></script>
 
 </body>
-1234
 </html>
 

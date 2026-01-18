@@ -1,4 +1,13 @@
-// UI Module - Funciones de interfaz de usuario
+/**
+ * MÓDULO DE INTERFAZ DE USUARIO
+ * =============================
+ * Gestiona:
+ * - Visibilidad de modales (login, edición de productos, clientes, proveedores)
+ * - Validación de permisos de usuario (Admin, Employee)
+ * - Modo oscuro/claro
+ * - Notificaciones visuales
+ */
+
 const UI = {
   showLoginModal() {
     document.getElementById("password-input").value = "";
@@ -60,6 +69,35 @@ const UI = {
 
   hideEditCustomerModal() {
     document.getElementById("edit-customer-modal").classList.add("hidden");
+  },
+
+  showEditSupplierModal(supplierId) {
+    const suppliers = Storage.getSuppliers();
+    const supplier = suppliers.find((s) => s.id === supplierId);
+
+    if (supplier) {
+      document.getElementById("edit-supplier-id").value = supplier.id;
+      document.getElementById("edit-supplier-razon-social").value =
+        supplier.razonSocial;
+      document.getElementById("edit-supplier-identificacion").value =
+        supplier.identificacion;
+      document.getElementById("edit-supplier-tipo-identificacion").value =
+        supplier.tipoIdentificacion;
+      document.getElementById("edit-supplier-direccion").value =
+        supplier.direccion;
+      document.getElementById("edit-supplier-telefono").value = supplier.telefono;
+      document.getElementById("edit-supplier-nombre-contacto").value =
+        supplier.nombreContacto;
+      document.getElementById("edit-supplier-correo").value = supplier.correo;
+
+      document.getElementById("edit-supplier-modal").classList.remove("hidden");
+    } else {
+      UI.showNotification("Proveedor no encontrado para editar.", "error");
+    }
+  },
+
+  hideEditSupplierModal() {
+    document.getElementById("edit-supplier-modal").classList.add("hidden");
   },
 
   showNotification(message, type = "info") {
@@ -177,6 +215,8 @@ const UI = {
       }
     } else if (tabName === "clientes") {
       Customers.loadAndRefreshUI();
+    } else if (tabName === "proveedores") {
+      Suppliers.loadAndRefreshUI();
     }
   },
 };
@@ -186,4 +226,6 @@ window.showEditModal = UI.showEditModal;
 window.hideEditModal = UI.hideEditModal;
 window.showEditCustomerModal = UI.showEditCustomerModal;
 window.hideEditCustomerModal = UI.hideEditCustomerModal;
+window.showEditSupplierModal = UI.showEditSupplierModal;
+window.hideEditSupplierModal = UI.hideEditSupplierModal;
 window.showLoginModal = UI.showLoginModal;

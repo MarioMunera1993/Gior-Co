@@ -1,4 +1,14 @@
-// Events Module - Manejadores de eventos
+/**
+ * MÓDULO DE EVENTOS
+ * =================
+ * Orquesta los manejadores de eventos de toda la aplicación
+ * - Login/Logout
+ * - Validación de formularios
+ * - Operaciones CRUD para todos los módulos
+ * - Cambio de pestañas
+ * - Búsqueda y filtros
+ */
+
 const Events = {
   handleLogin(e) {
     e.preventDefault();
@@ -146,6 +156,76 @@ const Events = {
     }
   },
 
+  handleAddSupplier(e) {
+    e.preventDefault();
+
+    const razonSocial = document.getElementById("supplier-razon-social").value;
+    const identificacion = document.getElementById(
+      "supplier-identificacion"
+    ).value;
+    const tipoIdentificacion = document.getElementById(
+      "supplier-tipo-identificacion"
+    ).value;
+    const direccion = document.getElementById("supplier-direccion").value;
+    const telefono = document.getElementById("supplier-telefono").value;
+    const nombreContacto = document.getElementById(
+      "supplier-nombre-contacto"
+    ).value;
+    const correo = document.getElementById("supplier-correo").value;
+
+    if (
+      Suppliers.addSupplier(
+        razonSocial,
+        identificacion,
+        tipoIdentificacion,
+        direccion,
+        telefono,
+        nombreContacto,
+        correo
+      )
+    ) {
+      e.target.reset();
+      Suppliers.loadAndRefreshUI();
+    }
+  },
+
+  handleEditSupplier(e) {
+    e.preventDefault();
+
+    const id = document.getElementById("edit-supplier-id").value;
+    const razonSocial = document.getElementById(
+      "edit-supplier-razon-social"
+    ).value;
+    const identificacion = document.getElementById(
+      "edit-supplier-identificacion"
+    ).value;
+    const tipoIdentificacion = document.getElementById(
+      "edit-supplier-tipo-identificacion"
+    ).value;
+    const direccion = document.getElementById("edit-supplier-direccion").value;
+    const telefono = document.getElementById("edit-supplier-telefono").value;
+    const nombreContacto = document.getElementById(
+      "edit-supplier-nombre-contacto"
+    ).value;
+    const correo = document.getElementById("edit-supplier-correo").value;
+
+    if (
+      Suppliers.editSupplier(
+        id,
+        razonSocial,
+        identificacion,
+        tipoIdentificacion,
+        direccion,
+        telefono,
+        nombreContacto,
+        correo
+      )
+    ) {
+      UI.hideEditSupplierModal();
+      Suppliers.loadAndRefreshUI();
+    }
+  },
+
   initializeEventListeners() {
     try {
       document
@@ -205,6 +285,41 @@ const Events = {
         limpiarFiltrosClientes.addEventListener("click", () => {
           document.getElementById("buscar-clientes").value = "";
           Customers.applyFiltersAndRender();
+        });
+      }
+
+      // Formulario de proveedores
+      const formAgregarProveedor = document.getElementById("form-proveedor");
+      if (formAgregarProveedor) {
+        formAgregarProveedor.addEventListener("submit", (e) =>
+          this.handleAddSupplier(e)
+        );
+      }
+
+      const formEditarProveedor = document.getElementById(
+        "form-editar-proveedor"
+      );
+      if (formEditarProveedor) {
+        formEditarProveedor.addEventListener("submit", (e) =>
+          this.handleEditSupplier(e)
+        );
+      }
+
+      // Búsqueda de proveedores
+      const buscarProveedores = document.getElementById("buscar-proveedores");
+      if (buscarProveedores) {
+        buscarProveedores.addEventListener("input", () =>
+          Suppliers.applyFiltersAndRender()
+        );
+      }
+
+      const limpiarFiltrosProveedores = document.getElementById(
+        "limpiar-filtros-proveedores"
+      );
+      if (limpiarFiltrosProveedores) {
+        limpiarFiltrosProveedores.addEventListener("click", () => {
+          document.getElementById("buscar-proveedores").value = "";
+          Suppliers.applyFiltersAndRender();
         });
       }
 
