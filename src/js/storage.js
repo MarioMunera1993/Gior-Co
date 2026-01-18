@@ -2,6 +2,7 @@
 const INVENTORY_STORAGE_KEY = "inventoryData_v1";
 const SALES_STORAGE_KEY = "salesData_v1";
 const USER_STORAGE_KEY = "userData_v1";
+const CUSTOMERS_STORAGE_KEY = "customersData_v1";
 
 const Storage = {
   // Inventario
@@ -66,6 +67,25 @@ const Storage = {
       localStorage.removeItem(USER_STORAGE_KEY);
     } catch (error) {
       console.error("Error al eliminar usuario:", error);
+    }
+  },
+
+  // Clientes
+  getCustomers() {
+    try {
+      const data = localStorage.getItem(CUSTOMERS_STORAGE_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error("Error al obtener clientes:", error);
+      return [];
+    }
+  },
+
+  saveCustomers(customers) {
+    try {
+      localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(customers));
+    } catch (error) {
+      console.error("Error al guardar clientes:", error);
     }
   },
 };

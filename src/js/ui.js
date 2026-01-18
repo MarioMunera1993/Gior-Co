@@ -36,6 +36,32 @@ const UI = {
     document.getElementById("edit-modal").classList.add("hidden");
   },
 
+  showEditCustomerModal(customerId) {
+    const customers = Storage.getCustomers();
+    const customer = customers.find((c) => c.id === customerId);
+
+    if (customer) {
+      document.getElementById("edit-customer-id").value = customer.id;
+      document.getElementById("edit-customer-primer-apellido").value =
+        customer.primerApellido;
+      document.getElementById("edit-customer-segundo-apellido").value =
+        customer.segundoApellido || "";
+      document.getElementById("edit-customer-nombre").value = customer.nombre;
+      document.getElementById("edit-customer-telefono").value = customer.telefono;
+      document.getElementById("edit-customer-correo").value = customer.correo;
+      document.getElementById("edit-customer-direccion").value =
+        customer.direccion;
+
+      document.getElementById("edit-customer-modal").classList.remove("hidden");
+    } else {
+      UI.showNotification("Cliente no encontrado para editar.", "error");
+    }
+  },
+
+  hideEditCustomerModal() {
+    document.getElementById("edit-customer-modal").classList.add("hidden");
+  },
+
   showNotification(message, type = "info") {
     try {
       const container = document.getElementById("notificaciones");
@@ -149,6 +175,8 @@ const UI = {
         Sales.updateDashboard();
         Charts.initSalesCharts();
       }
+    } else if (tabName === "clientes") {
+      Customers.loadAndRefreshUI();
     }
   },
 };
@@ -156,4 +184,6 @@ const UI = {
 // Exportar funciones globales para HTML
 window.showEditModal = UI.showEditModal;
 window.hideEditModal = UI.hideEditModal;
+window.showEditCustomerModal = UI.showEditCustomerModal;
+window.hideEditCustomerModal = UI.hideEditCustomerModal;
 window.showLoginModal = UI.showLoginModal;

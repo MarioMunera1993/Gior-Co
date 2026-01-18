@@ -7,38 +7,47 @@ Sistema web para gestión de inventario y ventas de ropa con autenticación basa
 - ✅ **Autenticación con dos roles**: Administrador y Empleado
 - 📦 **Gestión de inventario**: Agregar, editar y eliminar productos
 - 💰 **Control de ventas**: Registrar y visualizar ventas
+- � **Gestión de clientes**: Registrar y administrar clientes con campos: apellidos, nombre, teléfono, correo y dirección
 - 📊 **Gráficos y analytics**: Visualización de datos con Chart.js
 - 🌙 **Modo oscuro**: Soporte completo para dark mode
 - 📱 **Diseño responsivo**: Funciona en desktop y móviles
 - 💾 **Almacenamiento local**: Los datos se guardan en localStorage
+- ✔️ **Validación robusta**: Validación de datos en entrada con mensajes descriptivos
 
 ## 🔐 Credenciales de Prueba
 
 | Rol       | Contraseña         | Permisos                              |
 |-----------|-------------------|---------------------------------------|
-| Admin     | `Gior&Co2026*`   | Acceso completo (agregar, editar, gráficos) |
-| Empleado  | `Gior2026*`      | Solo visualizar inventario y registrar ventas |
+| Admin     | `Gior&Co2026*`   | Acceso completo (agregar, editar, ver gráficos, gestionar clientes) |
+| Empleado  | `Gior2026*`      | Visualizar inventario, registrar ventas, ver clientes |
 
 ## 📁 Estructura del Proyecto
 
 ```
 Gior-Co/
 ├── index.html           # HTML principal
+├── README.md            # Este archivo
+├── .gitignore           # Archivos a ignorar en git
 ├── src/
 │   ├── css/
-│   │   └── index.css    # Estilos personalizados
-│   ├── js/
-│   │   ├── index.js     # Lógica principal
-│   │   ├── auth.js      # Autenticación
-│   │   ├── inventory.js # Gestión de inventario
-│   │   ├── sales.js     # Gestión de ventas
-│   │   ├── ui.js        # Funciones de UI
-│   │   ├── storage.js   # Manejo de datos
-│   │   └── utils.js     # Funciones utilitarias
-│   └── js/validators/   # Validaciones
-│       └── input.js     # Validación de entrada
-├── .gitignore
-└── README.md
+│   │   └── index.css              # Estilos personalizados
+│   └── js/
+│       ├── app.js                 # Inicialización de la app
+│       ├── app-state.js           # Estado global
+│       ├── auth.js                # Autenticación y permisos
+│       ├── charts.js              # Gráficos y visualización
+│       ├── customers.js           # Gestión de clientes
+│       ├── events.js              # Manejadores de eventos
+│       ├── inventory.js           # Gestión de inventario
+│       ├── sales.js               # Gestión de ventas
+│       ├── storage.js             # Persistencia de datos (localStorage)
+│       ├── ui.js                  # Funciones de UI/UX
+│       ├── utils.js               # Funciones utilitarias
+│       ├── index.js.old           # Archivo anterior (respaldo)
+│       └── validators/
+│           ├── customer.js        # Validación de clientes
+│           └── input.js           # Validación de entrada general
+└── index.js.old         # Archivo original consolidado
 ```
 
 ## 🚀 Cómo usar
@@ -55,6 +64,29 @@ Gior-Co/
 - **Chart.js** - Gráficos
 - **LocalStorage** - Persistencia de datos
 
+## 👥 Módulo de Clientes
+
+El módulo de gestión de clientes permite registrar y administrar la información de los clientes con los siguientes campos:
+
+- **Primer Apellido** - Requerido, máximo 50 caracteres
+- **Segundo Apellido** - Opcional, máximo 50 caracteres
+- **Nombre** - Requerido, máximo 50 caracteres
+- **Teléfono** - Requerido, mínimo 7 dígitos
+- **Correo** - Requerido, debe ser un correo válido (único en el sistema)
+- **Dirección** - Requerido, máximo 150 caracteres
+
+**Funcionalidades:**
+- ✅ Agregar nuevos clientes con validación
+- ✅ Editar información de clientes existentes
+- ✅ Eliminar clientes del sistema
+- ✅ Buscar clientes por nombre, teléfono o correo
+- ✅ Ver lista completa de clientes registrados
+- ✅ Validación de correo único para evitar duplicados
+
+**Permisos:**
+- Solo administradores pueden agregar, editar y eliminar clientes
+- Empleados pueden ver el listado de clientes
+
 ## ⚠️ Notas de Seguridad
 
 > **Importante**: Este es un proyecto de demostración. Para producción:
@@ -64,14 +96,18 @@ Gior-Co/
 > - Usar HTTPS
 > - Implementar base de datos
 
-## 📝 Próximas mejoras
+## 📝 Posibles mejoras futuras
 
+- [ ] Vincular clientes con ventas (historial de compras)
+- [ ] Gráficos de clientes (distribución por región, etc.)
 - [ ] Integración con backend
 - [ ] Autenticación OAuth
 - [ ] Exportar datos a PDF/Excel
-- [ ] Búsqueda avanzada
-- [ ] Historial de cambios
+- [ ] Búsqueda avanzada con filtros
+- [ ] Historial de cambios (auditoría)
 - [ ] Multiidioma
+- [ ] Sistema de crédito para clientes
+- [ ] Notificaciones por correo
 
 ## 📧 Contacto
 

@@ -157,6 +157,10 @@
                     class="tab-button py-3 px-4 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition duration-150 ease-in-out border-b-4 border-transparent">
                     💰 Registro de Ventas
                 </button>
+                <button id="tab-clientes" data-tab="clientes"
+                    class="tab-button py-3 px-4 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition duration-150 ease-in-out border-b-4 border-transparent">
+                    👥 Gestión de Clientes
+                </button>
             </div>
         </nav>
     </header>
@@ -480,7 +484,143 @@
             </section>
         </div>
 
+        <div id="module-clientes" class="tab-content max-w-7xl mx-auto space-y-8 hidden">
+
+            <section id="dashboard-clientes" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div
+                    class="card bg-white dark:bg-gray-700 p-5 rounded-xl shadow-lg border-b-4 border-green-500 dark:border-green-400">
+                    <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-300">Total de clientes</h3>
+                    <p id="stat-clientes-total" class="text-3xl font-bold mt-1 text-gray-800 dark:text-white">0</p>
+                </div>
+            </section>
+
+            <section id="add-customer-section" class="form-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
+                <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Agregar Cliente</h2>
+                <form id="form-cliente" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <input type="text" id="customer-primer-apellido" required placeholder="Primer Apellido"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <input type="text" id="customer-segundo-apellido" placeholder="Segundo Apellido"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <input type="text" id="customer-nombre" required placeholder="Nombre"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <input type="tel" id="customer-telefono" required placeholder="Teléfono"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <input type="email" id="customer-correo" required placeholder="Correo"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <input type="text" id="customer-direccion" required placeholder="Dirección"
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <button type="submit"
+                        class="col-span-1 sm:col-span-2 lg:col-span-3 py-2 rounded-md shadow-md font-semibold transition duration-200 bg-green-600 hover:bg-green-700 text-white">
+                        Agregar Cliente
+                    </button>
+                </form>
+            </section>
+
+            <section class="filters-container bg-white dark:bg-gray-700 p-4 rounded-xl shadow-lg">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" id="buscar-clientes" placeholder="Buscar por nombre, teléfono o correo..."
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <button id="limpiar-filtros-clientes"
+                        class="py-2 rounded-md shadow-md font-semibold transition duration-200 bg-gray-600 hover:bg-gray-700 text-white">
+                        Limpiar Filtros
+                    </button>
+                </div>
+            </section>
+
+            <section class="tabla-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg overflow-x-auto">
+                <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Listado de Clientes</h2>
+                <table id="tabla-clientes" class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                    <thead class="bg-gray-50 dark:bg-gray-800">
+                        <tr>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Nombre Completo</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Teléfono</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Correo</th>
+                            <th
+                                class="px-6 py-3 text-left text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Dirección</th>
+                            <th
+                                class="px-6 py-3 text-center text-xs text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-700 divide-y divide-gray-200 dark:divide-gray-600">
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
     </main>
+
+    <!-- Modal para editar cliente -->
+    <div id="edit-customer-modal" class="modal hidden">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl max-w-lg w-full">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Editar Cliente</h2>
+
+            <form id="form-editar-cliente" class="space-y-4">
+                <input type="hidden" id="edit-customer-id">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit-customer-primer-apellido"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Primer Apellido</label>
+                        <input type="text" id="edit-customer-primer-apellido" required
+                            class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="edit-customer-segundo-apellido"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Segundo Apellido</label>
+                        <input type="text" id="edit-customer-segundo-apellido"
+                            class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="edit-customer-nombre"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre</label>
+                    <input type="text" id="edit-customer-nombre" required
+                        class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label for="edit-customer-telefono"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Teléfono</label>
+                    <input type="tel" id="edit-customer-telefono" required
+                        class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label for="edit-customer-correo"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Correo</label>
+                    <input type="email" id="edit-customer-correo" required
+                        class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label for="edit-customer-direccion"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Dirección</label>
+                    <input type="text" id="edit-customer-direccion" required
+                        class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button type="submit"
+                        class="flex-1 py-3 rounded-lg shadow-md font-semibold transition duration-200 bg-blue-600 hover:bg-blue-700 text-white">
+                        Guardar Cambios
+                    </button>
+                    <button type="button" onclick="hideEditCustomerModal()"
+                        class="flex-1 py-3 rounded-lg shadow-md font-semibold transition duration-200 bg-gray-600 hover:bg-gray-700 text-white">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Core modules -->
     <script src="./src/js/app-state.js"></script>
@@ -489,12 +629,14 @@
     
     <!-- Validators -->
     <script src="./src/js/validators/input.js"></script>
+    <script src="./src/js/validators/customer.js"></script>
     
     <!-- Feature modules -->
     <script src="./src/js/auth.js"></script>
     <script src="./src/js/ui.js"></script>
     <script src="./src/js/inventory.js"></script>
     <script src="./src/js/sales.js"></script>
+    <script src="./src/js/customers.js"></script>
     <script src="./src/js/charts.js"></script>
     
     <!-- Event handlers -->

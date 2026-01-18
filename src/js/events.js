@@ -88,6 +88,64 @@ const Events = {
     }
   },
 
+  handleAddCustomer(e) {
+    e.preventDefault();
+
+    const primerApellido =
+      document.getElementById("customer-primer-apellido").value;
+    const segundoApellido =
+      document.getElementById("customer-segundo-apellido").value;
+    const nombre = document.getElementById("customer-nombre").value;
+    const telefono = document.getElementById("customer-telefono").value;
+    const correo = document.getElementById("customer-correo").value;
+    const direccion = document.getElementById("customer-direccion").value;
+
+    if (
+      Customers.addCustomer(
+        primerApellido,
+        segundoApellido,
+        nombre,
+        telefono,
+        correo,
+        direccion
+      )
+    ) {
+      e.target.reset();
+      Customers.loadAndRefreshUI();
+    }
+  },
+
+  handleEditCustomer(e) {
+    e.preventDefault();
+
+    const id = document.getElementById("edit-customer-id").value;
+    const primerApellido = document.getElementById(
+      "edit-customer-primer-apellido"
+    ).value;
+    const segundoApellido = document.getElementById(
+      "edit-customer-segundo-apellido"
+    ).value;
+    const nombre = document.getElementById("edit-customer-nombre").value;
+    const telefono = document.getElementById("edit-customer-telefono").value;
+    const correo = document.getElementById("edit-customer-correo").value;
+    const direccion = document.getElementById("edit-customer-direccion").value;
+
+    if (
+      Customers.editCustomer(
+        id,
+        primerApellido,
+        segundoApellido,
+        nombre,
+        telefono,
+        correo,
+        direccion
+      )
+    ) {
+      UI.hideEditCustomerModal();
+      Customers.loadAndRefreshUI();
+    }
+  },
+
   initializeEventListeners() {
     try {
       document
@@ -114,6 +172,41 @@ const Events = {
       document
         .getElementById("form-venta")
         .addEventListener("submit", (e) => this.handleRegisterSale(e));
+
+      // Formulario de clientes
+      const formAgregarCliente = document.getElementById("form-cliente");
+      if (formAgregarCliente) {
+        formAgregarCliente.addEventListener("submit", (e) =>
+          this.handleAddCustomer(e)
+        );
+      }
+
+      const formEditarCliente = document.getElementById(
+        "form-editar-cliente"
+      );
+      if (formEditarCliente) {
+        formEditarCliente.addEventListener("submit", (e) =>
+          this.handleEditCustomer(e)
+        );
+      }
+
+      // Búsqueda de clientes
+      const buscarClientes = document.getElementById("buscar-clientes");
+      if (buscarClientes) {
+        buscarClientes.addEventListener("input", () =>
+          Customers.applyFiltersAndRender()
+        );
+      }
+
+      const limpiarFiltrosClientes = document.getElementById(
+        "limpiar-filtros-clientes"
+      );
+      if (limpiarFiltrosClientes) {
+        limpiarFiltrosClientes.addEventListener("click", () => {
+          document.getElementById("buscar-clientes").value = "";
+          Customers.applyFiltersAndRender();
+        });
+      }
 
       // Filtros
       document

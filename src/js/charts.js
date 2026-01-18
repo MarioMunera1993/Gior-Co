@@ -228,4 +228,14 @@ const Charts = {
       console.error("Error initializing sales charts:", error);
     }
   },
+
+  initCustomersCharts() {
+    try {
+      if (!Auth.isAdmin()) return;
+      // Placeholder para gráficos de clientes en el futuro
+      // Ejemplo: distribución geográfica, clientes recientes, etc.
+    } catch (error) {
+      console.error("Error initializing customers charts:", error);
+    }
+  },
 };
