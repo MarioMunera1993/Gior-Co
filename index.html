@@ -382,49 +382,78 @@
             <section class="form-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
                 <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Registrar Nueva Venta</h2>
 
-                <form id="form-venta" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label for="venta-producto"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Producto (Código -
-                                Nombre)</label>
-                            <select id="venta-producto" required
-                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
-                                <option value="">Seleccione un producto</option>
-                            </select>
-                        </div>
+               <form id="form-venta" class="space-y-4">
 
-                        <div>
-                            <label for="venta-cantidad"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cantidad</label>
-                            <input type="number" id="venta-cantidad" min="1" value="1" required
-                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
-                        </div>
+    <!-- NUEVOS CAMPOS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label for="venta-fecha"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha</label>
+            <input type="date" id="venta-fecha" required
+                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+        </div>
 
-                        <div>
-                            <label for="venta-precio-final"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Precio Unitario Final
-                                ($)</label>
-                            <input type="number" id="venta-precio-final" min="0" step="0.01" required
-                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
-                        </div>
-                    </div>
+        <div>
+            <label for="venta-id-cliente"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300">ID Cliente</label>
+            <input type="number" id="venta-id-cliente" required placeholder="Ej: 1"
+                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+        </div>
+    </div>
 
-                    <div>
-                        <label for="venta-detalle"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Detalle de la Venta
-                            (Cliente, Descuento, etc.)</label>
-                        <input type="text" id="venta-detalle" placeholder="Ej: Cliente Juan Pérez, 10% descuento"
-                            class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
-                    </div>
+    <!-- CAMPOS QUE YA TENÍAS -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+            <label for="venta-producto"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Producto (Código - Nombre)
+            </label>
+            <select id="venta-producto" required
+                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                <option value="">Seleccione un producto</option>
+            </select>
+        </div>
 
-                    <div class="pt-2">
-                        <button type="submit"
-                            class="w-full py-2 px-4 rounded-md shadow-md text-white bg-emerald-600 hover:bg-emerald-700 transition">
-                            Confirmar Venta y Descontar Stock
-                        </button>
-                    </div>
-                </form>
+        <div>
+            <label for="venta-cantidad"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cantidad</label>
+            <input type="number" id="venta-cantidad" min="1" value="1" required
+                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+        </div>
+
+        <div>
+            <label for="venta-precio-final"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Precio Unitario Final ($)
+            </label>
+            <input type="number" id="venta-precio-final" min="0" step="0.01" required
+                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+        </div>
+    </div>
+
+    <div>
+        <label for="venta-detalle"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Detalle de la Venta (Cliente, Descuento, etc.)
+        </label>
+        <input type="text" id="venta-detalle"
+            placeholder="Ej: Cliente Juan Pérez, 10% descuento"
+            class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+    </div>
+
+    <!-- CAMPOS OCULTOS PARA LA BD -->
+    <input type="hidden" id="venta-id-producto">
+    <input type="hidden" id="venta-cantidad-venta">
+    <input type="hidden" id="venta-valor-venta">
+
+    <div class="pt-2">
+        <button type="submit"
+            class="w-full py-2 px-4 rounded-md shadow-md text-white bg-emerald-600 hover:bg-emerald-700 transition">
+            Confirmar Venta y Descontar Stock
+        </button>
+    </div>
+</form>
+
             </section>
 
             <section id="sales-dashboard-section" class="dashboard-ventas grid grid-cols-2 lg:grid-cols-4 gap-4 hidden">
