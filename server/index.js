@@ -235,15 +235,18 @@ app.delete('/api/sales/:id', async (req, res) => {
 
 // --- AUTH ---
 app.post('/api/auth/login', async (req, res) => {
+    console.log('--- INTENTO DE LOGIN ---');
+    console.log('Body recibido:', req.body);
     try {
         const { password } = req.body;
-        // En un sistema real, buscaríamos por usuario Y contraseña (hasheada).
-        // Aquí replicamos la lógica simple actual: la contraseña define el usuario.
+        console.log(`Buscando usuario con password: '${password}'`);
 
         const [users] = await pool.query('SELECT * FROM users WHERE password = ?', [password]);
+        console.log(`Usuarios encontrados: ${users.length}`);
 
         if (users.length > 0) {
             const user = users[0];
+            console.log('Login exitoso para:', user.username);
             res.json({
                 success: true,
                 user: {
@@ -253,9 +256,11 @@ app.post('/api/auth/login', async (req, res) => {
                 }
             });
         } else {
+            console.log('Login fallido: Contraseña incorrecta');
             res.json({ success: false, error: 'Contraseña incorrecta' });
         }
     } catch (error) {
+        console.error('ERROR EN LOGIN:', error);
         res.status(500).json({ error: error.message });
     }
 });
