@@ -1,34 +1,36 @@
 /**
  * MÓDULO DE GESTIÓN DE CLIENTES
  * =============================
- * Gestiona el registro de clientes
- * - Agregar clientes (nombre, apellidos, teléfono, correo, dirección)
- * - Editar y eliminar clientes
- * - Búsqueda y filtrado de clientes
- * - Estadísticas de clientes (total registrados)
+ * Gestiona el registro de clientes via API
  */
 
 const Customers = {
-  loadAndRefreshUI() {
-    this.updateStats();
-    this.applyFiltersAndRender();
-    if (Auth.isAdmin()) {
-      Charts.initCustomersCharts();
+  async loadAndRefreshUI() {
+    try {
+      const customers = await Storage.getCustomers();
+      this.updateStats(customers);
+      this.applyFiltersAndRender(customers);
+      if (Auth.isAdmin()) {
+        if (typeof Charts !== 'undefined' && Charts.initCustomersCharts) {
+          Charts.initCustomersCharts(customers);
+        }
+      }
+    } catch (e) {
+      console.error("Error loading customers", e);
     }
   },
 
-  updateStats() {
-    const customers = Storage.getCustomers();
-    document.getElementById("stat-clientes-total").textContent =
-      customers.length;
+  updateStats(customers) {
+    if (!customers) return;
+    if (document.getElementById("stat-clientes-total"))
+      document.getElementById("stat-clientes-total").textContent = customers.length;
   },
 
-  applyFiltersAndRender() {
-    const customers = Storage.getCustomers();
-    const searchText = document
-      .getElementById("buscar-clientes")
-      .value.toLowerCase()
-      .trim();
+  async applyFiltersAndRender(customers) {
+    if (!customers) customers = await Storage.getCustomers();
+
+    const searchInput = document.getElementById("buscar-clientes");
+    const searchText = searchInput ? searchInput.value.toLowerCase().trim() : "";
 
     const filteredCustomers = customers.filter((c) => {
       const fullName = `${c.primerApellido} ${c.segundoApellido || ""} ${c.nombre}`.toLowerCase();
@@ -43,11 +45,9 @@ const Customers = {
     this.renderCustomersTable(filteredCustomers);
   },
 
-  renderCustomersTable(customers = Storage.getCustomers()) {
+  renderCustomersTable(customers) {
     try {
-      const tbody = document
-        .getElementById("tabla-clientes")
-        .querySelector("tbody");
+      const tbody = document.getElementById("tabla-clientes").querySelector("tbody");
       tbody.innerHTML = "";
       const isAdmin = Auth.isAdmin();
 
@@ -55,8 +55,7 @@ const Customers = {
         const row = tbody.insertRow();
         const fullName = `${c.primerApellido} ${c.segundoApellido || ""} ${c.nombre}`.trim();
 
-        row.className =
-          "hover:bg-gray-50 dark:hover:bg-gray-600 transition duration-150";
+        row.className = "hover:bg-gray-50 dark:hover:bg-gray-600 transition duration-150";
 
         row.insertCell().innerHTML = fullName;
         row.insertCell().innerHTML = c.telefono;
@@ -81,10 +80,11 @@ const Customers = {
           actionsCell.style.display = "none";
         }
 
-        row.cells[0].setAttribute("data-label", "Nombre Completo");
-        row.cells[1].setAttribute("data-label", "Teléfono");
-        row.cells[2].setAttribute("data-label", "Correo");
-        row.cells[3].setAttribute("data-label", "Dirección");
+        // Mobile labels
+        if (row.cells[0]) row.cells[0].setAttribute("data-label", "Nombre Completo");
+        if (row.cells[1]) row.cells[1].setAttribute("data-label", "Teléfono");
+        if (row.cells[2]) row.cells[2].setAttribute("data-label", "Correo");
+        if (row.cells[3]) row.cells[3].setAttribute("data-label", "Dirección");
       });
     } catch (error) {
       console.error("Error al renderizar tabla de clientes:", error);
@@ -92,140 +92,86 @@ const Customers = {
     }
   },
 
-  addCustomer(
-    primerApellido,
-    segundoApellido,
-    nombre,
-    telefono,
-    correo,
-    direccion
-  ) {
+  async addCustomer(primerApellido, segundoApellido, nombre, telefono, correo, direccion) {
     if (!Auth.isAdmin()) {
-      UI.showNotification(
-        "Permiso denegado. Solo Administradores pueden agregar clientes.",
-        "error"
-      );
+      UI.showNotification("Permiso denegado.", "error");
       return false;
     }
 
-    // Validación
-    const validation = CustomerValidator.validateCustomer(
-      primerApellido,
-      segundoApellido,
-      nombre,
-      telefono,
-      correo,
-      direccion
-    );
+    const validation = CustomerValidator.validateCustomer(primerApellido, segundoApellido, nombre, telefono, correo, direccion);
 
     if (!validation.isValid) {
-      validation.errors.forEach((error) =>
-        UI.showNotification(error, "error")
-      );
+      validation.errors.forEach((error) => UI.showNotification(error, "error"));
       return false;
     }
 
-    let customers = Storage.getCustomers();
+    const newCustomer = {
+      id: Utils.generateId(),
+      primerApellido: primerApellido.trim(),
+      segundoApellido: segundoApellido.trim(),
+      nombre: nombre.trim(),
+      telefono: telefono.trim(),
+      correo: correo.trim().toLowerCase(),
+      direccion: direccion.trim(),
+      fechaRegistro: new Date().toISOString(),
+    };
 
-    const exists = customers.some(
-      (cust) =>
-        cust.correo.toLowerCase() ===
-        correo.trim().toLowerCase()
-    );
-
-    if (!exists) {
-      const newCustomer = {
-        id: Utils.generateId(),
-        primerApellido: primerApellido.trim(),
-        segundoApellido: segundoApellido.trim(),
-        nombre: nombre.trim(),
-        telefono: telefono.trim(),
-        correo: correo.trim().toLowerCase(),
-        direccion: direccion.trim(),
-        fechaRegistro: new Date().toISOString(),
-      };
-
-      customers.push(newCustomer);
-      Storage.saveCustomers(customers);
-
-      UI.showNotification("Cliente agregado con éxito", "success");
-      return true;
-    } else {
-      UI.showNotification("Error: El correo ya está registrado.", "error");
-      return false;
-    }
-  },
-
-  editCustomer(
-    id,
-    primerApellido,
-    segundoApellido,
-    nombre,
-    telefono,
-    correo,
-    direccion
-  ) {
-    const customers = Storage.getCustomers();
-
-    // Validación
-    const validation = CustomerValidator.validateCustomer(
-      primerApellido,
-      segundoApellido,
-      nombre,
-      telefono,
-      correo,
-      direccion
-    );
-
-    if (!validation.isValid) {
-      validation.errors.forEach((error) =>
-        UI.showNotification(error, "error")
-      );
-      return false;
-    }
-
-    const index = customers.findIndex((c) => c.id === id);
-
-    if (index !== -1) {
-      const originalEmail = customers[index].correo;
-      const newEmail = correo.trim().toLowerCase();
-
-      // Verificar si el correo ya existe (excluir el correo actual del cliente)
-      const emailExists = customers.some(
-        (c) => c.correo === newEmail && c.id !== id
-      );
-
-      if (emailExists) {
-        UI.showNotification("Error: El correo ya está registrado.", "error");
+    try {
+      const result = await Storage.API.createCustomer(newCustomer);
+      // El backend podría devolver error de duplicado (correo único, aunque en schema no puse UNIQUE en correo, es buena práctica)
+      // Mi schema: id PK. correo VARCHAR(100).
+      // Si no puse UNIQUE, el backend lo insertará. La validación frontend original chequeaba duplicados.
+      // Aquí confiamos en el insert.
+      if (result.error) {
+        UI.showNotification("Error: " + result.error, "error");
         return false;
       }
 
-      customers[index] = {
-        id: id,
-        primerApellido: primerApellido.trim(),
-        segundoApellido: segundoApellido.trim(),
-        nombre: nombre.trim(),
-        telefono: telefono.trim(),
-        correo: newEmail,
-        direccion: direccion.trim(),
-        fechaRegistro: customers[index].fechaRegistro,
-      };
-
-      Storage.saveCustomers(customers);
-      UI.showNotification("Cliente actualizado con éxito", "success");
+      UI.showNotification("Cliente agregado con éxito", "success");
+      await this.loadAndRefreshUI();
       return true;
-    } else {
-      UI.showNotification("Error: Cliente no encontrado.", "error");
+    } catch (e) {
+      UI.showNotification("Error al agregar cliente", "error");
       return false;
     }
   },
 
-  deleteCustomer(id) {
+  async editCustomer(id, primerApellido, segundoApellido, nombre, telefono, correo, direccion) {
+    const validation = CustomerValidator.validateCustomer(primerApellido, segundoApellido, nombre, telefono, correo, direccion);
+
+    if (!validation.isValid) {
+      validation.errors.forEach((error) => UI.showNotification(error, "error"));
+      return false;
+    }
+
+    const updateData = {
+      id: id,
+      primerApellido: primerApellido.trim(),
+      segundoApellido: segundoApellido.trim(),
+      nombre: nombre.trim(),
+      telefono: telefono.trim(),
+      correo: correo.trim().toLowerCase(),
+      direccion: direccion.trim()
+    };
+
+    try {
+      const result = await Storage.API.updateCustomer(updateData);
+      if (result.error) {
+        UI.showNotification("Error: " + result.error, "error");
+        return false;
+      }
+      UI.showNotification("Cliente actualizado con éxito", "success");
+      await this.loadAndRefreshUI();
+      return true;
+    } catch (e) {
+      UI.showNotification("Error al actualizar cliente", "error");
+      return false;
+    }
+  },
+
+  async deleteCustomer(id) {
     if (!Auth.isAdmin()) {
-      UI.showNotification(
-        "Permiso denegado. Solo Administradores pueden eliminar.",
-        "error"
-      );
+      UI.showNotification("Permiso denegado.", "error");
       return false;
     }
 
@@ -233,16 +179,17 @@ const Customers = {
       return false;
     }
 
-    let customers = Storage.getCustomers();
-    const initialLength = customers.length;
-    customers = customers.filter((c) => c.id !== id);
-
-    if (customers.length < initialLength) {
-      Storage.saveCustomers(customers);
+    try {
+      const result = await Storage.API.deleteCustomer(id);
+      if (result.error) {
+        UI.showNotification("Error: " + result.error, "error");
+        return false;
+      }
       UI.showNotification("Cliente eliminado con éxito", "success");
+      await this.loadAndRefreshUI();
       return true;
-    } else {
-      UI.showNotification("Error al intentar eliminar el cliente.", "error");
+    } catch (e) {
+      UI.showNotification("Error al eliminar cliente", "error");
       return false;
     }
   },

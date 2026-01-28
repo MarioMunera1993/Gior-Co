@@ -1,15 +1,6 @@
 /**
  * MÓDULO DE AUTENTICACIÓN
  * ======================
- * Gestiona:
- * - Login/Logout de usuarios
- * - Roles de acceso (Admin, Employee)
- * - Verificación de permisos
- * - Sesiones persistentes
- * 
- * Credenciales disponibles:
- * - Admin: Gior&Co2026* (acceso total)
- * - Employee: Gior2026* (acceso limitado)
  */
 
 // Roles disponibles en el sistema
@@ -18,72 +9,60 @@ const ROLES = {
   EMPLOYEE: "employee",
 };
 
-// Credenciales válidas (en producción usar backend con tokens)
-const PASSWORDS = {
-  "Gior&Co2026*": { role: ROLES.ADMIN, username: "Administrador" },
-  "Gior2026*": { role: ROLES.EMPLOYEE, username: "Trabajador" },
-};
-
-// Usuario actualmente autenticado
+// Usuario actualmente autenticado (en memoria)
 let currentUser = null;
 
 const Auth = {
-  // Validar contraseña e iniciar sesión
-  login(password) {
+  async login(password) {
+    // Validar formato localmente primero
     const validation = InputValidator.validatePassword(password);
     if (!validation.isValid) {
       return { success: false, error: validation.errors[0] };
     }
 
-    const userConfig = PASSWORDS[password];
+    try {
+      const result = await Storage.API.login(password);
 
-    if (userConfig) {
-      // Crear objeto de usuario autenticado
-      currentUser = {
-        username: userConfig.username,
-        role: userConfig.role,
-        id: Utils.generateId(),
-      };
-      Storage.saveUser(currentUser);
-      return { success: true, user: currentUser };
+      if (result.success) {
+        currentUser = result.user;
+        Storage.saveUser(currentUser); // Persistir sesión localmente
+        return { success: true, user: currentUser };
+      } else {
+        return { success: false, error: result.error || "Login fallido" };
+      }
+    } catch (e) {
+      console.error("Login error:", e);
+      return { success: false, error: "Error de conexión con el servidor" };
     }
-
-    return { success: false, error: "Contraseña incorrecta" };
   },
 
-  // Cerrar sesión
   logout() {
     currentUser = null;
     Storage.clearUser();
   },
 
-  // Obtener usuario actual
   getCurrentUser() {
     return currentUser;
   },
 
-  // Establecer usuario manualmente
   setCurrentUser(user) {
     currentUser = user;
   },
 
-  // Verificar si usuario es administrador
   isAdmin() {
     return currentUser?.role === ROLES.ADMIN;
   },
 
-  // Verificar si usuario es empleado
   isEmployee() {
     return currentUser?.role === ROLES.EMPLOYEE;
   },
 
-  // Verificar si hay sesión activa
   isAuthenticated() {
     return currentUser !== null;
   },
 
-  // Intentar restaurar sesión anterior
   restoreSession() {
+    // Recuperar sesión guardada
     const savedUser = Storage.getUser();
     if (savedUser) {
       currentUser = savedUser;

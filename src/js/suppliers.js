@@ -1,35 +1,36 @@
 /**
  * MÓDULO DE GESTIÓN DE PROVEEDORES
  * ================================
- * Gestiona el registro de proveedores
- * - Agregar proveedores (razón social, identificación, tipo de ID, dirección, teléfono, contacto, correo)
- * - Editar y eliminar proveedores
- * - Búsqueda y filtrado de proveedores
- * - Soporta múltiples tipos de identificación (RUT, NIT, RFC, CURP, CUIT, PAS, OTR)
- * - Estadísticas de proveedores
+ * Gestiona el registro de proveedores via API
  */
 
 const Suppliers = {
-  loadAndRefreshUI() {
-    this.updateStats();
-    this.applyFiltersAndRender();
-    if (Auth.isAdmin()) {
-      Charts.initSuppliersCharts();
+  async loadAndRefreshUI() {
+    try {
+      const suppliers = await Storage.getSuppliers();
+      this.updateStats(suppliers);
+      this.applyFiltersAndRender(suppliers);
+      if (Auth.isAdmin()) {
+        if (typeof Charts !== 'undefined' && Charts.initSuppliersCharts) {
+          Charts.initSuppliersCharts(suppliers);
+        }
+      }
+    } catch (e) {
+      console.error("Error loading suppliers", e);
     }
   },
 
-  updateStats() {
-    const suppliers = Storage.getSuppliers();
-    document.getElementById("stat-proveedores-total").textContent =
-      suppliers.length;
+  updateStats(suppliers) {
+    if (!suppliers) return;
+    if (document.getElementById("stat-proveedores-total"))
+      document.getElementById("stat-proveedores-total").textContent = suppliers.length;
   },
 
-  applyFiltersAndRender() {
-    const suppliers = Storage.getSuppliers();
-    const searchText = document
-      .getElementById("buscar-proveedores")
-      .value.toLowerCase()
-      .trim();
+  async applyFiltersAndRender(suppliers) {
+    if (!suppliers) suppliers = await Storage.getSuppliers();
+
+    const searchInput = document.getElementById("buscar-proveedores");
+    const searchText = searchInput ? searchInput.value.toLowerCase().trim() : "";
 
     const filteredSuppliers = suppliers.filter((s) => {
       const matchesSearch =
@@ -44,19 +45,16 @@ const Suppliers = {
     this.renderSuppliersTable(filteredSuppliers);
   },
 
-  renderSuppliersTable(suppliers = Storage.getSuppliers()) {
+  renderSuppliersTable(suppliers) {
     try {
-      const tbody = document
-        .getElementById("tabla-proveedores")
-        .querySelector("tbody");
+      const tbody = document.getElementById("tabla-proveedores").querySelector("tbody");
       tbody.innerHTML = "";
       const isAdmin = Auth.isAdmin();
 
       suppliers.forEach((s) => {
         const row = tbody.insertRow();
 
-        row.className =
-          "hover:bg-gray-50 dark:hover:bg-gray-600 transition duration-150";
+        row.className = "hover:bg-gray-50 dark:hover:bg-gray-600 transition duration-150";
 
         row.insertCell().innerHTML = s.razonSocial;
         row.insertCell().innerHTML = `${s.tipoIdentificacion}: ${s.identificacion}`;
@@ -83,12 +81,12 @@ const Suppliers = {
           actionsCell.style.display = "none";
         }
 
-        row.cells[0].setAttribute("data-label", "Razón Social");
-        row.cells[1].setAttribute("data-label", "Identificación");
-        row.cells[2].setAttribute("data-label", "Contacto");
-        row.cells[3].setAttribute("data-label", "Teléfono");
-        row.cells[4].setAttribute("data-label", "Correo");
-        row.cells[5].setAttribute("data-label", "Dirección");
+        if (row.cells[0]) row.cells[0].setAttribute("data-label", "Razón Social");
+        if (row.cells[1]) row.cells[1].setAttribute("data-label", "Identificación");
+        if (row.cells[2]) row.cells[2].setAttribute("data-label", "Contacto");
+        if (row.cells[3]) row.cells[3].setAttribute("data-label", "Teléfono");
+        if (row.cells[4]) row.cells[4].setAttribute("data-label", "Correo");
+        if (row.cells[5]) row.cells[5].setAttribute("data-label", "Dirección");
       });
     } catch (error) {
       console.error("Error al renderizar tabla de proveedores:", error);
@@ -96,158 +94,83 @@ const Suppliers = {
     }
   },
 
-  addSupplier(
-    razonSocial,
-    identificacion,
-    tipoIdentificacion,
-    direccion,
-    telefono,
-    nombreContacto,
-    correo
-  ) {
+  async addSupplier(razonSocial, identificacion, tipoIdentificacion, direccion, telefono, nombreContacto, correo) {
     if (!Auth.isAdmin()) {
-      UI.showNotification(
-        "Permiso denegado. Solo Administradores pueden agregar proveedores.",
-        "error"
-      );
+      UI.showNotification("Permiso denegado.", "error");
       return false;
     }
 
-    // Validación
-    const validation = SupplierValidator.validateSupplier(
-      razonSocial,
-      identificacion,
-      tipoIdentificacion,
-      direccion,
-      telefono,
-      nombreContacto,
-      correo
-    );
+    const validation = SupplierValidator.validateSupplier(razonSocial, identificacion, tipoIdentificacion, direccion, telefono, nombreContacto, correo);
 
     if (!validation.isValid) {
-      validation.errors.forEach((error) =>
-        UI.showNotification(error, "error")
-      );
+      validation.errors.forEach((error) => UI.showNotification(error, "error"));
       return false;
     }
 
-    let suppliers = Storage.getSuppliers();
+    const newSupplier = {
+      id: Utils.generateId(),
+      razonSocial: razonSocial.trim(),
+      identificacion: identificacion.trim(),
+      tipoIdentificacion: tipoIdentificacion.trim(),
+      direccion: direccion.trim(),
+      telefono: telefono.trim(),
+      nombreContacto: nombreContacto.trim(),
+      correo: correo.trim().toLowerCase(),
+      fechaRegistro: new Date().toISOString(),
+    };
 
-    const exists = suppliers.some(
-      (supp) =>
-        supp.identificacion.toLowerCase() ===
-          identificacion.trim().toLowerCase() ||
-        supp.correo.toLowerCase() === correo.trim().toLowerCase()
-    );
-
-    if (!exists) {
-      const newSupplier = {
-        id: Utils.generateId(),
-        razonSocial: razonSocial.trim(),
-        identificacion: identificacion.trim(),
-        tipoIdentificacion: tipoIdentificacion.trim(),
-        direccion: direccion.trim(),
-        telefono: telefono.trim(),
-        nombreContacto: nombreContacto.trim(),
-        correo: correo.trim().toLowerCase(),
-        fechaRegistro: new Date().toISOString(),
-      };
-
-      suppliers.push(newSupplier);
-      Storage.saveSuppliers(suppliers);
-
-      UI.showNotification("Proveedor agregado con éxito", "success");
-      return true;
-    } else {
-      UI.showNotification(
-        "Error: El identificador o correo ya está registrado.",
-        "error"
-      );
-      return false;
-    }
-  },
-
-  editSupplier(
-    id,
-    razonSocial,
-    identificacion,
-    tipoIdentificacion,
-    direccion,
-    telefono,
-    nombreContacto,
-    correo
-  ) {
-    const suppliers = Storage.getSuppliers();
-
-    // Validación
-    const validation = SupplierValidator.validateSupplier(
-      razonSocial,
-      identificacion,
-      tipoIdentificacion,
-      direccion,
-      telefono,
-      nombreContacto,
-      correo
-    );
-
-    if (!validation.isValid) {
-      validation.errors.forEach((error) =>
-        UI.showNotification(error, "error")
-      );
-      return false;
-    }
-
-    const index = suppliers.findIndex((s) => s.id === id);
-
-    if (index !== -1) {
-      const originalEmail = suppliers[index].correo;
-      const newEmail = correo.trim().toLowerCase();
-      const originalId = suppliers[index].identificacion;
-      const newId = identificacion.trim();
-
-      // Verificar si el identificador o correo ya existe (excluir el actual)
-      const exists = suppliers.some(
-        (s) =>
-          (s.identificacion.toLowerCase() === newId.toLowerCase() ||
-            s.correo === newEmail) &&
-          s.id !== id
-      );
-
-      if (exists) {
-        UI.showNotification(
-          "Error: El identificador o correo ya está registrado.",
-          "error"
-        );
+    try {
+      const result = await Storage.API.createSupplier(newSupplier);
+      if (result.error) {
+        UI.showNotification("Error: " + result.error, "error");
         return false;
       }
-
-      suppliers[index] = {
-        id: id,
-        razonSocial: razonSocial.trim(),
-        identificacion: newId,
-        tipoIdentificacion: tipoIdentificacion.trim(),
-        direccion: direccion.trim(),
-        telefono: telefono.trim(),
-        nombreContacto: nombreContacto.trim(),
-        correo: newEmail,
-        fechaRegistro: suppliers[index].fechaRegistro,
-      };
-
-      Storage.saveSuppliers(suppliers);
-      UI.showNotification("Proveedor actualizado con éxito", "success");
+      UI.showNotification("Proveedor agregado con éxito", "success");
+      await this.loadAndRefreshUI();
       return true;
-    } else {
-      UI.showNotification("Error: Proveedor no encontrado.", "error");
+    } catch (e) {
+      UI.showNotification("Error al agregar proveedor", "error");
       return false;
     }
   },
 
-  deleteSupplier(id) {
+  async editSupplier(id, razonSocial, identificacion, tipoIdentificacion, direccion, telefono, nombreContacto, correo) {
+    const validation = SupplierValidator.validateSupplier(razonSocial, identificacion, tipoIdentificacion, direccion, telefono, nombreContacto, correo);
+
+    if (!validation.isValid) {
+      validation.errors.forEach((error) => UI.showNotification(error, "error"));
+      return false;
+    }
+
+    const updateData = {
+      id: id,
+      razonSocial: razonSocial.trim(),
+      identificacion: identificacion.trim(),
+      tipoIdentificacion: tipoIdentificacion.trim(),
+      direccion: direccion.trim(),
+      telefono: telefono.trim(),
+      nombreContacto: nombreContacto.trim(),
+      correo: correo.trim().toLowerCase()
+    };
+
+    try {
+      const result = await Storage.API.updateSupplier(updateData);
+      if (result.error) {
+        UI.showNotification("Error: " + result.error, "error");
+        return false;
+      }
+      UI.showNotification("Proveedor actualizado con éxito", "success");
+      await this.loadAndRefreshUI();
+      return true;
+    } catch (e) {
+      UI.showNotification("Error al actualizar proveedor", "error");
+      return false;
+    }
+  },
+
+  async deleteSupplier(id) {
     if (!Auth.isAdmin()) {
-      UI.showNotification(
-        "Permiso denegado. Solo Administradores pueden eliminar.",
-        "error"
-      );
+      UI.showNotification("Permiso denegado.", "error");
       return false;
     }
 
@@ -255,16 +178,17 @@ const Suppliers = {
       return false;
     }
 
-    let suppliers = Storage.getSuppliers();
-    const initialLength = suppliers.length;
-    suppliers = suppliers.filter((s) => s.id !== id);
-
-    if (suppliers.length < initialLength) {
-      Storage.saveSuppliers(suppliers);
+    try {
+      const result = await Storage.API.deleteSupplier(id);
+      if (result.error) {
+        UI.showNotification("Error: " + result.error, "error");
+        return false;
+      }
       UI.showNotification("Proveedor eliminado con éxito", "success");
+      await this.loadAndRefreshUI();
       return true;
-    } else {
-      UI.showNotification("Error al intentar eliminar el proveedor.", "error");
+    } catch (e) {
+      UI.showNotification("Error al eliminar proveedor", "error");
       return false;
     }
   },
