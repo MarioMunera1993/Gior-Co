@@ -394,10 +394,13 @@
         </div>
 
         <div>
-            <label for="venta-id-cliente"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300">ID Cliente</label>
-            <input type="number" id="venta-id-cliente" required placeholder="Ej: 1"
+            <label for="venta-cliente"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cliente</label>
+            <select id="venta-cliente" required
                 class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                <option value="">Seleccione un cliente</option>
+                <option value="consumidor_final">Consumidor Final</option>
+            </select>
         </div>
     </div>
 

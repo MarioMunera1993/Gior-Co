@@ -20,7 +20,9 @@ const Storage = {
     try {
       const response = await fetch(`${API_URL}/inventory`);
       if (!response.ok) throw new Error('Error de red');
-      return await response.json();
+      const data = await response.json();
+      console.log('getInventory response:', data); // DEBUG
+      return data;
     } catch (error) {
       console.error("Error al obtener inventario:", error);
       return [];

@@ -212,6 +212,7 @@ const UI = {
       Inventory.loadAndRefreshUI();
     } else if (tabName === "ventas") {
       Sales.populateProductSelect();
+      if (Sales.populateCustomerSelect) Sales.populateCustomerSelect();
       Sales.renderSalesTable();
       if (Auth.isAdmin()) {
         Sales.updateDashboard();

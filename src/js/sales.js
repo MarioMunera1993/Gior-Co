@@ -58,6 +58,28 @@ const Sales = {
     }
   },
 
+  async populateCustomerSelect() {
+    try {
+      const select = document.getElementById("venta-cliente");
+      if (!select) return;
+
+      const customers = await Storage.getCustomers();
+
+      // Preserve "Consumidor Final" or default option if desired, but here we rebuild
+      select.innerHTML = '<option value="">Seleccione un cliente</option>';
+      select.innerHTML += '<option value="consumidor_final">Consumidor Final</option>';
+
+      customers.forEach((customer) => {
+        const option = document.createElement("option");
+        option.value = customer.id;
+        option.textContent = `${customer.nombre} ${customer.primerApellido} (${customer.correo})`; // Mostrar info relevante
+        select.appendChild(option);
+      });
+    } catch (error) {
+      console.error("Error al poblar selector de clientes:", error);
+    }
+  },
+
   async handleProductChange(e) {
     const selectedValue = e.target.value;
     const productId = selectedValue ? selectedValue.split("|")[0] : null;
@@ -87,6 +109,14 @@ const Sales = {
         return false;
       }
 
+      // Validar Cliente seleccionado
+      const clienteSelect = document.getElementById("venta-cliente");
+      const idCliente = clienteSelect ? clienteSelect.value : null;
+      if (!idCliente) {
+        UI.showNotification("Seleccione un cliente.", "error");
+        return false;
+      }
+
       const parts = selectedOption.split("|");
       if (parts.length !== 2) {
         UI.showNotification("Seleccione un producto válido.", "error");
@@ -94,12 +124,9 @@ const Sales = {
       }
 
       const idVendido = parts[0];
-      const codigoVendido = parts[1]; // codigo no viene en value parts[1]?? En populate parts[1] es codigo.
+      const codigoVendido = parts[1];
 
       // Necesitamos info completa del producto para nombre, etc.
-      // Backend deberia encargarse de validar stock, buscar nombre, etc.
-      // Pero el frontend envía: id, idProducto, codigoProducto, nombreProducto...
-      // Vamos a obtener el producto para llenar estos datos.
       const inventory = await Storage.getInventory();
       const producto = inventory.find(p => p.id === idVendido);
 
@@ -127,6 +154,7 @@ const Sales = {
         detalle: detalle.trim(),
         fecha: new Date().toISOString(),
         vendedor: Auth.getCurrentUser().username,
+        idCliente: idCliente === 'consumidor_final' ? null : idCliente // Guardar null si es consumidor final o el ID
       };
 
       const result = await Storage.API.createSale(newSale);

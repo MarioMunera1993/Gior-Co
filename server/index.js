@@ -78,13 +78,14 @@ app.get('/api/customers', async (req, res) => {
 
 app.post('/api/customers', async (req, res) => {
     try {
-        const { id, primerApellido, segundoApellido, nombre, telefono, correo, direccion, fechaRegistro } = req.body;
+        const { id, primerApellido, segundoApellido, nombre, telefono, correo, direccion } = req.body;
         await pool.query(
-            'INSERT INTO customers (id, primerApellido, segundoApellido, nombre, telefono, correo, direccion, fechaRegistro) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [id, primerApellido, segundoApellido, nombre, telefono, correo, direccion, fechaRegistro]
+            'INSERT INTO customers (id, primerApellido, segundoApellido, nombre, telefono, correo, direccion, fechaRegistro) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+            [id, primerApellido, segundoApellido, nombre, telefono, correo, direccion]
         );
         res.json({ message: 'Cliente agregado', id });
     } catch (error) {
+        console.error("Error en POST /api/customers:", error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -168,7 +169,7 @@ app.get('/api/sales', async (req, res) => {
 
 app.post('/api/sales', async (req, res) => {
     try {
-        const { id, idProducto, codigoProducto, nombreProducto, cantidad, precioUnitario, totalVenta, detalle, fecha, vendedor } = req.body;
+        const { id, idProducto, codigoProducto, nombreProducto, cantidad, precioUnitario, totalVenta, detalle, fecha, vendedor, idCliente } = req.body;
 
         // Actualizar inventario (Transacción básica)
         const connection = await pool.getConnection(); // Obtener conexión para transacción
@@ -184,9 +185,10 @@ app.post('/api/sales', async (req, res) => {
             await connection.query('UPDATE inventory SET cantidad = cantidad - ? WHERE id = ?', [cantidad, idProducto]);
 
             // Registrar venta
+            // Ahora incluimos idCliente y usamos NOW() para la fecha
             await connection.query(
-                'INSERT INTO sales (id, idProducto, codigoProducto, nombreProducto, cantidad, precioUnitario, totalVenta, detalle, fecha, vendedor) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                [id, idProducto, codigoProducto, nombreProducto, cantidad, precioUnitario, totalVenta, detalle, fecha, vendedor]
+                'INSERT INTO sales (id, idProducto, codigoProducto, nombreProducto, cantidad, precioUnitario, totalVenta, detalle, fecha, vendedor, idCliente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?)',
+                [id, idProducto, codigoProducto, nombreProducto, cantidad, precioUnitario, totalVenta, detalle, vendedor, idCliente]
             );
 
             await connection.commit();
@@ -198,6 +200,7 @@ app.post('/api/sales', async (req, res) => {
             connection.release();
         }
     } catch (error) {
+        console.error("Error en POST /api/sales:", error);
         res.status(500).json({ error: error.message });
     }
 });

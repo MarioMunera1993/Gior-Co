@@ -2,10 +2,6 @@
  * MÓDULO DE GRÁFICOS
  * ==================
  * Crea y gestiona visualizaciones de datos
- * - Gráficos de inventario (productos, valor total, stock bajo)
- * - Gráficos de ventas (total, productos vendidos, ingresos hoy)
- * - Gráficos de clientes y proveedores (conteos)
- * - Usa Chart.js v4.4.3 para renderizado
  */
 
 const Charts = {
@@ -18,7 +14,7 @@ const Charts = {
       }
       const ctx = document.getElementById(ctxId);
       if (!ctx) {
-        console.warn(`Canvas element with id ${ctxId} not found`);
+        // console.warn(`Canvas element with id ${ctxId} not found`);
         return;
       }
       const canvasContext = ctx.getContext("2d");
@@ -28,11 +24,18 @@ const Charts = {
     }
   },
 
-  initInventoryCharts() {
+  async initInventoryCharts(inventoryData) {
     try {
       if (!Auth.isAdmin()) return;
 
-      const inventory = Storage.getInventory();
+      // Si no nos pasan datos, los pedimos (ahora con await)
+      const inventory = inventoryData || await Storage.getInventory();
+
+      if (!Array.isArray(inventory)) {
+        console.error("Inventory is not an array:", inventory);
+        return;
+      }
+
       let agotados = 0;
       let bajo = 0;
       let ok = 0;
@@ -72,16 +75,22 @@ const Charts = {
 
       this.createChart("chart-stock-pie", "doughnut", pieData, pieOptions);
 
-      const topSelling = Storage.getInventory()
+      // Top selling logic using quantity (assuming static inventory 'popularity' or similar?)
+      // Original code used `p.cantidad` for "Top Selling"? That seems like "Top Stock". 
+      // Correct logic for Top Selling usually requires Sales data.
+      // But preserving original logic: it sorted by quantity descending. 
+      // Wait, original code: .sort((a, b) => b.cantidad - a.cantidad). That is "Highest Stock".
+
+      const topStock = [...inventory] // Clone to avoid mutating original if needed
         .sort((a, b) => b.cantidad - a.cantidad)
         .slice(0, 5);
 
       const barData = {
-        labels: topSelling.map((p) => p.nombre),
+        labels: topStock.map((p) => p.nombre),
         datasets: [
           {
             label: "Stock Actual",
-            data: topSelling.map((p) => p.cantidad),
+            data: topStock.map((p) => p.cantidad),
             backgroundColor: "#3b82f6",
           },
         ],
@@ -119,10 +128,16 @@ const Charts = {
     }
   },
 
-  initSalesCharts() {
+  async initSalesCharts(salesData) {
     try {
       if (!Auth.isAdmin()) return;
-      const sales = Storage.getSales();
+
+      const sales = salesData || await Storage.getSales();
+
+      if (!Array.isArray(sales)) {
+        console.error("Sales is not an array:", sales);
+        return;
+      }
 
       const salesByProduct = sales.reduce((acc, sale) => {
         const key = `${sale.codigoProducto} - ${sale.nombreProducto}`;
@@ -184,7 +199,9 @@ const Charts = {
           month: "short",
           year: "numeric",
         });
-        acc[monthYear] = (acc[monthYear] || 0) + sale.totalVenta;
+        // Ensure totalVenta is number
+        const amount = parseFloat(sale.totalVenta) || 0;
+        acc[monthYear] = (acc[monthYear] || 0) + amount;
         return acc;
       }, {});
 
@@ -238,23 +255,13 @@ const Charts = {
     }
   },
 
-  initCustomersCharts() {
-    try {
-      if (!Auth.isAdmin()) return;
-      // Placeholder para gráficos de clientes en el futuro
-      // Ejemplo: distribución geográfica, clientes recientes, etc.
-    } catch (error) {
-      console.error("Error initializing customers charts:", error);
-    }
+  async initCustomersCharts(customersData) {
+    if (!Auth.isAdmin()) return;
+    // Placeholder
   },
 
-  initSuppliersCharts() {
-    try {
-      if (!Auth.isAdmin()) return;
-      // Placeholder para gráficos de proveedores en el futuro
-      // Ejemplo: productos por proveedor, análisis de precios, etc.
-    } catch (error) {
-      console.error("Error initializing suppliers charts:", error);
-    }
-  },
+  async initSuppliersCharts(suppliersData) {
+    if (!Auth.isAdmin()) return;
+    // Placeholder
+  }
 };
