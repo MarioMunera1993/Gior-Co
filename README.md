@@ -1,144 +1,100 @@
 # Gior&Co - Sistema de Inventario y Ventas
 
-Sistema web para gestión de inventario y ventas de ropa con autenticación basada en roles.
+Sistema web para gestión de inventario y ventas de ropa con autenticación basada en roles, ahora potenciado con un backend **Node.js** y base de datos **MySQL**.
 
 ## 📋 Características
 
-- ✅ **Autenticación con dos roles**: Administrador y Empleado
-- 📦 **Gestión de inventario**: Agregar, editar y eliminar productos
-- 💰 **Control de ventas**: Registrar y visualizar ventas
-- � **Gestión de clientes**: Registrar y administrar clientes con campos: apellidos, nombre, teléfono, correo y dirección- 🏭 **Gestión de proveedores**: Registrar y administrar proveedores con campos: razón social, identificación, tipo de identificación, dirección, teléfono, contacto y correo- 📊 **Gráficos y analytics**: Visualización de datos con Chart.js
-- 🌙 **Modo oscuro**: Soporte completo para dark mode
-- 📱 **Diseño responsivo**: Funciona en desktop y móviles
-- 💾 **Almacenamiento local**: Los datos se guardan en localStorage
-- ✔️ **Validación robusta**: Validación de datos en entrada con mensajes descriptivos
+- ✅ **Autenticación con dos roles**: Administrador y Empleado (Gestión de sesiones vía API).
+- 📦 **Gestión de Inventario**: CRUD completo con persistencia en base de datos.
+- 💰 **Control de Ventas**: Registro de ventas con **selección de clientes** y control de stock transaccional.
+- 👥 **Gestión de Clientes**: Base de datos de clientes integrada.
+- 🏭 **Gestión de Proveedores**: Directorio de proveedores.
+- 📊 **Gráficos y Analytics**: Visualización en tiempo real de stock e ingresos.
+- 🌙 **Modo Oscuro**: Soporte nativo para temas claro/oscuro.
+- 💾 **Base de Datos MySQL**: Datos centralizados y seguros, reemplazando a `localStorage`. (Solo se usa `localStorage` para sesión).
 
-## 🔐 Credenciales de Prueba
+## 🔐 Credenciales de Acceso
 
-| Rol       | Contraseña         | Permisos                              |
-|-----------|-------------------|---------------------------------------|
-| Admin     | `Gior&Co2026*`   | Acceso completo (agregar, editar, ver gráficos, gestionar clientes y proveedores) |
-| Empleado  | `Gior2026*`      | Visualizar inventario, registrar ventas, ver clientes y proveedores |
+| Rol | Usuario | Contraseña | Permisos |
+| :--- | :--- | :--- | :--- |
+| **Administrador** | Administrador | `Gior&Co2026*` | Acceso total (ABM productos, ventas, clientes, reportes). |
+| **Empleado** | Trabajador | `Gior2026*` | Registrar ventas, ver inventario. |
+
+## 🚀 Instalación y Ejecución
+
+### Prerrequisitos
+- **Node.js** (v18 o superior)
+- **MySQL Server**
+
+### 1. Configuración de Base de Datos
+1. Asegúrate de que MySQL esté corriendo.
+2. Crea la base de datos (si no existe, el sistema intentará crearla, pero es mejor asegurar):
+   ```sql
+   CREATE DATABASE gior_co_db;
+   ```
+
+### 2. Configuración del Servidor (Backend)
+1. Navega a la carpeta del servidor:
+   ```bash
+   cd server
+   ```
+2. Instala las dependencias:
+   ```bash
+   npm install
+   ```
+3. Verifica/Crea el archivo `.env` (opcional, por defecto usa estos valores):
+   ```env
+   DB_HOST=localhost
+   DB_USER=root
+   DB_PASSWORD=Data2026*
+   DB_NAME=gior_co_db
+   PORT=3000
+   ```
+4. **Inicia el servidor:**
+   ```bash
+   node index.js
+   ```
+   *Deberías ver: "Servidor corriendo en http://localhost:3000" y "Conectado a MySQL..."*
+
+### 3. Ejecución del Cliente (Frontend)
+1. Abre una nueva terminal en la raíz del proyecto.
+2. Puedes abrir el archivo `index.html` directamente en tu navegador, o usar un servidor estático para evitar bloqueos CORS estrictos:
+   ```bash
+   npx serve .
+   ```
+3. Accede a la URL indicada (ej. `http://localhost:5000` o la ruta del archivo).
 
 ## 📁 Estructura del Proyecto
 
 ```
 Gior-Co/
-├── index.html           # HTML principal
-├── README.md            # Este archivo
-├── .gitignore           # Archivos a ignorar en git
+├── server/                  # [NUEVO] Backend Node.js
+│   ├── index.js             # API REST (Express)
+│   ├── db.js                # Conexión MySQL y Esquemas
+│   ├── package.json         # Dependencias del servidor
+│   └── ...scripts           # Scripts de utilidad
 ├── src/
-│   ├── css/
-│   │   └── index.css              # Estilos personalizados
-│   └── js/
-│       ├── app.js                 # Inicialización de la app
-│       ├── app-state.js           # Estado global
-│       ├── auth.js                # Autenticación y permisos
-│       ├── charts.js              # Gráficos y visualización
-│       ├── customers.js           # Gestión de clientes
-│       ├── suppliers.js           # Gestión de proveedores
-│       ├── events.js              # Manejadores de eventos
-│       ├── inventory.js           # Gestión de inventario
-│       ├── sales.js               # Gestión de ventas
-│       ├── storage.js             # Persistencia de datos (localStorage)
-│       ├── ui.js                  # Funciones de UI/UX
-│       ├── utils.js               # Funciones utilitarias
-│       ├── index.js.old           # Archivo anterior (respaldo)
-│       └── validators/
-│           ├── customer.js        # Validación de clientes
-│           ├── supplier.js        # Validación de proveedores
-│           └── input.js           # Validación de entrada general
-└── index.js.old         # Archivo original consolidado
+│   ├── js/
+│   │   ├── storage.js       # [ACTUALIZADO] Cliente API (Fetch)
+│   │   ├── sales.js         # Lógica de ventas (con integración de clientes)
+│   │   ├── ...              # Módulos de lógica frontend
+│   └── css/                 # Estilos Tailwind/Custom
+├── index.html               # SPA Principal
+└── README.md                # Documentación
 ```
 
-## 🚀 Cómo usar
+## 🛠️ Stack Tecnológico
 
-1. Abre `index.html` en tu navegador
-2. Ingresa una contraseña según tu rol
-3. Accede al sistema de inventario y ventas
-
-## 🛠️ Tecnologías
-
-- **HTML5** - Estructura
-- **CSS3** + **Tailwind CSS** - Estilos
-- **JavaScript (Vanilla)** - Lógica
-- **Chart.js** - Gráficos
-- **LocalStorage** - Persistencia de datos
-
-## 👥 Módulo de Clientes
-
-El módulo de gestión de clientes permite registrar y administrar la información de los clientes con los siguientes campos:
-
-- **Primer Apellido** - Requerido, máximo 50 caracteres
-- **Segundo Apellido** - Opcional, máximo 50 caracteres
-- **Nombre** - Requerido, máximo 50 caracteres
-- **Teléfono** - Requerido, mínimo 7 dígitos
-- **Correo** - Requerido, debe ser un correo válido (único en el sistema)
-- **Dirección** - Requerido, máximo 150 caracteres
-
-**Funcionalidades:**
-- ✅ Agregar nuevos clientes con validación
-- ✅ Editar información de clientes existentes
-- ✅ Eliminar clientes del sistema
-- ✅ Buscar clientes por nombre, teléfono o correo
-- ✅ Ver lista completa de clientes registrados
-- ✅ Validación de correo único para evitar duplicados
-
-**Permisos:**
-- Solo administradores pueden agregar, editar y eliminar clientes
-- Empleados pueden ver el listado de clientes
-
-## 🏭 Módulo de Proveedores
-
-El módulo de gestión de proveedores permite registrar y administrar la información de los proveedores con los siguientes campos:
-
-- **Razón Social** - Requerido, máximo 100 caracteres
-- **Identificación** - Requerido, máximo 30 caracteres
-- **Tipo de Identificación** - Requerido (RUT, NIT, RFC, CURP, CUIT, PAS, OTR)
-- **Dirección** - Requerido, máximo 150 caracteres
-- **Teléfono** - Requerido, mínimo 7 dígitos
-- **Nombre del Contacto** - Requerido, máximo 100 caracteres
-- **Correo** - Requerido, debe ser un correo válido
-
-**Funcionalidades:**
-- ✅ Agregar nuevos proveedores con validación completa
-- ✅ Editar información de proveedores existentes
-- ✅ Eliminar proveedores del sistema
-- ✅ Buscar proveedores por razón social, identificación, contacto o correo
-- ✅ Ver lista completa de proveedores registrados
-- ✅ Validación de identificación y correo únicos para evitar duplicados
-
-**Permisos:**
-- Solo administradores pueden agregar, editar y eliminar proveedores
+- **Frontend**: HTML5, Tailwind CSS, JavaScript (Vanilla ES6+).
+- **Backend**: Node.js, Express.js.
+- **Base de Datos**: MySQL (librería `mysql2` con `async/await`).
+- **Gráficos**: Chart.js.
 
 ## ⚠️ Notas de Seguridad
 
-> **Importante**: Este es un proyecto de demostración. Para producción:
-> - Implementar backend con autenticación segura
-> - Usar tokens JWT en lugar de contraseñas hardcodeadas
-> - Validar datos en servidor
-> - Usar HTTPS
-> - Implementar base de datos
-
-## 📝 Posibles mejoras futuras
-
-- [ ] Vincular clientes con ventas (historial de compras)
-- [ ] Vincular proveedores con productos (gestión de compras)
-- [ ] Gráficos de clientes y proveedores
-- [ ] Sistema de órdenes de compra a proveedores
-- [ ] Integración con backend
-- [ ] Autenticación OAuth
-- [ ] Exportar datos a PDF/Excel
-- [ ] Búsqueda avanzada con filtros complejos
-- [ ] Historial de cambios (auditoría)
-- [ ] Multiidioma
-- [ ] Sistema de crédito para clientes
-- [ ] Notificaciones por correo
-
-## 📧 Contacto
-
-Proyecto desarrollado por Gior&Co
+> **Nota**: Este proyecto ha migrado de una versión puramente local. Aunque ahora usa backend, las contraseñas en la base de datos de demostración podrían estar en texto plano para facilitar pruebas iniciales. 
+> **Recomendación Prod**: En un entorno real, siempre hashear contraseñas (bcrypt/argon2) y usar HTTPS.
 
 ---
 
-**Última actualización**: 18 Enero 2026
+**Última actualización**: 28 Enero 2026

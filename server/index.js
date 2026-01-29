@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { initDB, pool } = require('./db');
+const mysql = require('mysql2/promise');
 require('dotenv').config();
 
 const app = express();
@@ -11,57 +11,100 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Iniciar Base de Datos
-initDB();
-
-// Rutas de prueba
-app.get('/', (req, res) => {
-    res.send('API Gior-Co funcionando correctamente');
+// Pool de conexión (Misma config)
+const pool = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || 'Data2026*',
+    database: process.env.DB_NAME || 'gior_co_db',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-// Rutas de la API (Implementación básica)
+// Rutas de la API (Adaptada a Schema v2)
 
-// --- INVENTARIO ---
+// --- INVENTARIO (Productos + Stock) ---
 app.get('/api/inventory', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM inventory');
+        // Query para unir producto, stock, tipo y talla
+        // Alias para mantener compatibilidad con frontend (id, nombre, etc.)
+        const query = `
+            SELECT 
+                p.idProducto as id,
+                p.codigo,
+                p.descripcion as nombre,
+                t.nombre as talla,
+                p.color,
+                tp.nombre as tipo,
+                s.cantidadActual as cantidad,
+                p.precio
+            FROM producto p
+            LEFT JOIN stock s ON p.idProducto = s.idProducto
+            LEFT JOIN talla t ON p.idTalla = t.idTalla
+            LEFT JOIN tipo_producto tp ON p.idTipoProducto = tp.idTipoProducto
+        `;
+        const [rows] = await pool.query(query);
         res.json(rows);
     } catch (error) {
+        console.error('Error GET /inventory:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
 app.post('/api/inventory', async (req, res) => {
     try {
-        const { id, codigo, nombre, talla, color, cantidad, precio } = req.body;
-        await pool.query(
-            'INSERT INTO inventory (id, codigo, nombre, talla, color, cantidad, precio) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [id, codigo, nombre, talla, color, cantidad, precio]
-        );
-        res.json({ message: 'Producto agregado', id });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+        const { codigo, nombre, talla, color, cantidad, precio } = req.body;
+        // frontend envia 'nombre' que es descripcion
 
-app.put('/api/inventory/:id', async (req, res) => {
-    try {
-        const { nombre, talla, color, cantidad, precio } = req.body;
-        await pool.query(
-            'UPDATE inventory SET nombre=?, talla=?, color=?, cantidad=?, precio=? WHERE id=?',
-            [nombre, talla, color, cantidad, precio, req.params.id]
-        );
-        res.json({ message: 'Producto actualizado' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+        const connection = await pool.getConnection();
+        await connection.beginTransaction();
 
-app.delete('/api/inventory/:id', async (req, res) => {
-    try {
-        await pool.query('DELETE FROM inventory WHERE id=?', [req.params.id]);
-        res.json({ message: 'Producto eliminado' });
+        try {
+            // 1. Buscar o Crear ID Talla
+            let idTalla = null;
+            const [tallas] = await connection.query('SELECT idTalla FROM talla WHERE nombre = ?', [talla]);
+            if (tallas.length > 0) {
+                idTalla = tallas[0].idTalla;
+            } else {
+                const [resTalla] = await connection.query('INSERT INTO talla (nombre) VALUES (?)', [talla]);
+                idTalla = resTalla.insertId;
+            }
+
+            // 2. Buscar o Crear ID Tipo Producto (Por defecto 'Genérico' si no se especifica, aquí asumiremos 'Ropa' o inferencia simple)
+            // Para esta demo, asignamos al primer tipo disponible o creamos uno
+            let idTipo = 1; // Default
+
+            // 3. Insertar Producto
+            const [resProd] = await connection.query(
+                'INSERT INTO producto (codigo, idTipoProducto, descripcion, color, idTalla, precio) VALUES (?, ?, ?, ?, ?, ?)',
+                [codigo, idTipo, nombre, color, idTalla, precio]
+            );
+            const idProducto = resProd.insertId;
+
+            // 4. Insertar Stock Inicial
+            await connection.query(
+                'INSERT INTO stock (idProducto, cantidadActual) VALUES (?, ?)',
+                [idProducto, cantidad]
+            );
+
+            // 5. Registrar Movimiento Inicial (Entrada)
+            await connection.query(
+                'INSERT INTO inventario (idProducto, tipoMovimiento, cantidad) VALUES (?, ?, ?)',
+                [idProducto, 'ENTRADA', cantidad]
+            );
+
+            await connection.commit();
+            res.json({ message: 'Producto agregado', id: idProducto });
+
+        } catch (err) {
+            await connection.rollback();
+            throw err;
+        } finally {
+            connection.release();
+        }
     } catch (error) {
+        console.error('Error POST /inventory:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -69,45 +112,28 @@ app.delete('/api/inventory/:id', async (req, res) => {
 // --- CLIENTES ---
 app.get('/api/customers', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM customers');
+        // Alias para compatibilidad parcial: idCliente -> id
+        const [rows] = await pool.query('SELECT idCliente as id, primerApellido, segundoApellido, nombre, telefono, correo, direccion FROM cliente');
         res.json(rows);
     } catch (error) {
+        console.error('Error GET /customers:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
 app.post('/api/customers', async (req, res) => {
     try {
-        const { id, primerApellido, segundoApellido, nombre, telefono, correo, direccion } = req.body;
-        await pool.query(
-            'INSERT INTO customers (id, primerApellido, segundoApellido, nombre, telefono, correo, direccion, fechaRegistro) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
-            [id, primerApellido, segundoApellido, nombre, telefono, correo, direccion]
-        );
-        res.json({ message: 'Cliente agregado', id });
-    } catch (error) {
-        console.error("Error en POST /api/customers:", error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.put('/api/customers/:id', async (req, res) => {
-    try {
         const { primerApellido, segundoApellido, nombre, telefono, correo, direccion } = req.body;
-        await pool.query(
-            'UPDATE customers SET primerApellido=?, segundoApellido=?, nombre=?, telefono=?, correo=?, direccion=? WHERE id=?',
-            [primerApellido, segundoApellido, nombre, telefono, correo, direccion, req.params.id]
-        );
-        res.json({ message: 'Cliente actualizado' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+        // No necesitamos ID, es auto increment. Frontend enviaba UUID pero lo ignoramos o lo usamos como referencia externa si hubiera campo.
+        // Aquí usaremos AUTO_INCREMENT nativo.
 
-app.delete('/api/customers/:id', async (req, res) => {
-    try {
-        await pool.query('DELETE FROM customers WHERE id=?', [req.params.id]);
-        res.json({ message: 'Cliente eliminado' });
+        await pool.query(
+            'INSERT INTO cliente (primerApellido, segundoApellido, nombre, telefono, correo, direccion, fechaCreacion) VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE)',
+            [primerApellido, segundoApellido, nombre, telefono, correo, direccion]
+        );
+        res.json({ message: 'Cliente agregado' });
     } catch (error) {
+        console.error('Error POST /customers:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -115,44 +141,25 @@ app.delete('/api/customers/:id', async (req, res) => {
 // --- PROVEEDORES ---
 app.get('/api/suppliers', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM suppliers');
+        const [rows] = await pool.query('SELECT idProveedor as id, razonSocial, identificacion, tipoIdentificacion, nombreContacto, telefono, correo, direccion FROM proveedor');
         res.json(rows);
     } catch (error) {
+        console.error('Error GET /suppliers:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
 app.post('/api/suppliers', async (req, res) => {
     try {
-        const { id, razonSocial, identificacion, tipoIdentificacion, nombreContacto, telefono, correo, direccion, fechaRegistro } = req.body;
-        await pool.query(
-            'INSERT INTO suppliers (id, razonSocial, identificacion, tipoIdentificacion, nombreContacto, telefono, correo, direccion, fechaRegistro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [id, razonSocial, identificacion, tipoIdentificacion, nombreContacto, telefono, correo, direccion, fechaRegistro]
-        );
-        res.json({ message: 'Proveedor agregado', id });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.put('/api/suppliers/:id', async (req, res) => {
-    try {
         const { razonSocial, identificacion, tipoIdentificacion, nombreContacto, telefono, correo, direccion } = req.body;
-        await pool.query(
-            'UPDATE suppliers SET razonSocial=?, identificacion=?, tipoIdentificacion=?, nombreContacto=?, telefono=?, correo=?, direccion=? WHERE id=?',
-            [razonSocial, identificacion, tipoIdentificacion, nombreContacto, telefono, correo, direccion, req.params.id]
-        );
-        res.json({ message: 'Proveedor actualizado' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
 
-app.delete('/api/suppliers/:id', async (req, res) => {
-    try {
-        await pool.query('DELETE FROM suppliers WHERE id=?', [req.params.id]);
-        res.json({ message: 'Proveedor eliminado' });
+        await pool.query(
+            'INSERT INTO proveedor (razonSocial, identificacion, tipoIdentificacion, nombreContacto, telefono, correo, direccion) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [razonSocial, identificacion, tipoIdentificacion, nombreContacto, telefono, correo, direccion]
+        );
+        res.json({ message: 'Proveedor agregado' });
     } catch (error) {
+        console.error('Error POST /suppliers:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -160,96 +167,96 @@ app.delete('/api/suppliers/:id', async (req, res) => {
 // --- VENTAS ---
 app.get('/api/sales', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM sales');
+        // JOIN para obtener nombres y códigos
+        const query = `
+            SELECT 
+                dv.idDetalleVenta as id, -- ID unico del renglon
+                v.fechaVenta as fecha,
+                p.codigo as codigoProducto,
+                p.descripcion as nombreProducto,
+                dv.cantidad,
+                dv.precioUnitario,
+                (dv.cantidad * dv.precioUnitario) as totalVenta,
+                v.vendedor,
+                CONCAT(c.nombre, ' ', c.primerApellido) as detalle -- Usamos nombre cliente como detalle por ahora
+            FROM detalle_venta dv
+            JOIN venta v ON dv.idVenta = v.idVenta
+            JOIN producto p ON dv.idProducto = p.idProducto
+            JOIN cliente c ON v.idCliente = c.idCliente
+            ORDER BY v.fechaVenta DESC
+        `;
+        const [rows] = await pool.query(query);
         res.json(rows);
     } catch (error) {
+        console.error('Error GET /sales:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
 app.post('/api/sales', async (req, res) => {
     try {
-        const { id, idProducto, codigoProducto, nombreProducto, cantidad, precioUnitario, totalVenta, detalle, fecha, vendedor, idCliente } = req.body;
+        const { idProducto, cantidad, precioUnitario, detalle, vendedor, idCliente } = req.body;
+        // El frontend envia 'idProducto' que ahora debe ser el INT de la tabla producto.
 
-        // Actualizar inventario (Transacción básica)
-        const connection = await pool.getConnection(); // Obtener conexión para transacción
+        // Validación de cliente
+        if (!idCliente) throw new Error("Cliente es requerido");
+
+        const connection = await pool.getConnection();
+        await connection.beginTransaction();
+
         try {
-            await connection.beginTransaction();
+            // 1. Verificar Stock
+            const [stocks] = await connection.query('SELECT cantidadActual FROM stock WHERE idProducto = ?', [idProducto]);
+            if (stocks.length === 0) throw new Error('Producto no encontrado en stock');
+            if (stocks[0].cantidadActual < cantidad) throw new Error('Stock insuficiente');
 
-            // Verificar stock actual
-            const [products] = await connection.query('SELECT cantidad FROM inventory WHERE id = ?', [idProducto]);
-            if (products.length === 0) throw new Error('Producto no encontrado');
-            if (products[0].cantidad < cantidad) throw new Error('Stock insuficiente');
+            // 2. Crear Venta (Cabecera)
+            const total = cantidad * precioUnitario;
+            const [resVenta] = await connection.query(
+                'INSERT INTO venta (idCliente, total, vendedor) VALUES (?, ?, ?)',
+                [idCliente, total, vendedor]
+            );
+            const idVenta = resVenta.insertId;
 
-            // Restar stock
-            await connection.query('UPDATE inventory SET cantidad = cantidad - ? WHERE id = ?', [cantidad, idProducto]);
-
-            // Registrar venta
-            // Ahora incluimos idCliente y usamos NOW() para la fecha
+            // 3. Crear Detalle Venta
             await connection.query(
-                'INSERT INTO sales (id, idProducto, codigoProducto, nombreProducto, cantidad, precioUnitario, totalVenta, detalle, fecha, vendedor, idCliente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?)',
-                [id, idProducto, codigoProducto, nombreProducto, cantidad, precioUnitario, totalVenta, detalle, vendedor, idCliente]
+                'INSERT INTO detalle_venta (idVenta, idProducto, cantidad, precioUnitario) VALUES (?, ?, ?, ?)',
+                [idVenta, idProducto, cantidad, precioUnitario]
+            );
+
+            // 4. Actualizar Stock
+            await connection.query('UPDATE stock SET cantidadActual = cantidadActual - ? WHERE idProducto = ?', [cantidad, idProducto]);
+
+            // 5. Registrar Movimiento (Salida)
+            await connection.query(
+                'INSERT INTO inventario (idProducto, tipoMovimiento, cantidad, referenciaId) VALUES (?, ?, ?, ?)',
+                [idProducto, 'SALIDA', quantidade = cantidad, idVenta]
             );
 
             await connection.commit();
-            res.json({ message: 'Venta registrada', id });
+            res.json({ message: 'Venta registrada', id: idVenta });
+
         } catch (err) {
             await connection.rollback();
             throw err;
         } finally {
             connection.release();
         }
+
     } catch (error) {
-        console.error("Error en POST /api/sales:", error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.delete('/api/sales/:id', async (req, res) => {
-    try {
-        const connection = await pool.getConnection();
-        try {
-            await connection.beginTransaction();
-
-            // Obtener venta para revertir stock
-            const [sales] = await connection.query('SELECT * FROM sales WHERE id = ?', [req.params.id]);
-            if (sales.length === 0) throw new Error('Venta no encontrada');
-
-            const sale = sales[0];
-
-            // Revertir stock
-            await connection.query('UPDATE inventory SET cantidad = cantidad + ? WHERE id = ?', [sale.cantidad, sale.idProducto]);
-
-            // Eliminar venta
-            await connection.query('DELETE FROM sales WHERE id = ?', [req.params.id]);
-
-            await connection.commit();
-            res.json({ message: 'Venta eliminada y stock revertido' });
-        } catch (err) {
-            await connection.rollback();
-            throw err;
-        } finally {
-            connection.release();
-        }
-    } catch (error) {
+        console.error('Error POST /sales:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
 // --- AUTH ---
 app.post('/api/auth/login', async (req, res) => {
-    console.log('--- INTENTO DE LOGIN ---');
-    console.log('Body recibido:', req.body);
     try {
         const { password } = req.body;
-        console.log(`Buscando usuario con password: '${password}'`);
-
         const [users] = await pool.query('SELECT * FROM users WHERE password = ?', [password]);
-        console.log(`Usuarios encontrados: ${users.length}`);
 
         if (users.length > 0) {
             const user = users[0];
-            console.log('Login exitoso para:', user.username);
             res.json({
                 success: true,
                 user: {
@@ -259,16 +266,15 @@ app.post('/api/auth/login', async (req, res) => {
                 }
             });
         } else {
-            console.log('Login fallido: Contraseña incorrecta');
             res.json({ success: false, error: 'Contraseña incorrecta' });
         }
     } catch (error) {
-        console.error('ERROR EN LOGIN:', error);
+        console.error('Error Login:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-
+// Iniciar servidor
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`Servidor v2 corriendo en http://localhost:${PORT}`);
 });
