@@ -12,7 +12,9 @@ const Utils = {
   formatCurrency(value) {
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
-      currency: "USD",
+      currency: "COP",
+      minimumFractionDigits: 0, // Pesos colombianos suelen no usar decimales para montos grandes
+      maximumFractionDigits: 0
     }).format(value);
   },
 

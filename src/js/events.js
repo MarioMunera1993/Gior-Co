@@ -10,15 +10,15 @@
  */
 
 const Events = {
-  handleLogin(e) {
+  async handleLogin(e) {
     e.preventDefault();
     const password = document.getElementById("password-input").value.trim();
 
-    const loginResult = Auth.login(password);
+    const loginResult = await Auth.login(password);
 
     if (loginResult.success) {
       UI.hideLoginModal();
-      Inventory.loadAndRefreshUI();
+      await Inventory.loadAndRefreshUI();
       UI.updateUIPermissions();
       UI.showNotification(
         `Bienvenido, ${loginResult.user.username} (${loginResult.user.role === ROLES.ADMIN ? "Admin" : "Empleado"})`,
@@ -71,6 +71,58 @@ const Events = {
       UI.hideEditModal();
       Inventory.loadAndRefreshUI();
     }
+  },
+
+  handleAddToCart(e) {
+    e.preventDefault();
+
+    const selectedOption = document.getElementById("venta-producto").value;
+    const cantidadVendida = document.getElementById("venta-cantidad").value;
+    const precioUnitarioFinal = document.getElementById("venta-precio-final").value;
+
+    if (!selectedOption || selectedOption.trim() === "") {
+      UI.showNotification("Seleccione un producto válido.", "error");
+      return;
+    }
+
+    const parts = selectedOption.split("|");
+    if (parts.length !== 2) {
+      UI.showNotification("Seleccione un producto válido.", "error");
+      return;
+    }
+
+    const idProducto = parts[0];
+    const codigoProducto = parts[1];
+
+    // Obtener info del producto del inventario
+    Storage.getInventory().then(inventory => {
+      // Buscar por ID (comparación flexible: string o número)
+      const producto = inventory.find(p => String(p.id) === String(idProducto));
+
+      if (!producto) {
+        console.error("Producto no encontrado. ID buscado:", idProducto, "Inventario:", inventory);
+        UI.showNotification("Producto no encontrado.", "error");
+        return;
+      }
+
+      // Validar cantidad y precio
+      const validation = InputValidator.validateSale(cantidadVendida, precioUnitarioFinal, producto.nombre);
+      if (!validation.isValid) {
+        validation.errors.forEach((error) => UI.showNotification(error, "error"));
+        return;
+      }
+
+      // Agregar al carrito
+      Sales.addToCart(producto, cantidadVendida, precioUnitarioFinal);
+
+      // Limpiar campos de producto (mantener cliente y fecha)
+      document.getElementById("venta-producto").value = "";
+      document.getElementById("venta-cantidad").value = "1";
+      document.getElementById("venta-precio-final").value = "";
+    }).catch(error => {
+      console.error("Error al obtener inventario:", error);
+      UI.showNotification("Error al cargar productos", "error");
+    });
   },
 
   handleRegisterSale(e) {
@@ -249,9 +301,27 @@ const Events = {
         .getElementById("form-editar-producto")
         .addEventListener("submit", (e) => this.handleEditProduct(e));
 
-      document
-        .getElementById("form-venta")
-        .addEventListener("submit", (e) => this.handleRegisterSale(e));
+      // Botón agregar al carrito
+      const btnAgregarCarrito = document.getElementById("btn-agregar-carrito");
+      if (btnAgregarCarrito) {
+        btnAgregarCarrito.addEventListener("click", (e) => this.handleAddToCart(e));
+      }
+
+      // Botón finalizar venta
+      const btnFinalizarVenta = document.getElementById("btn-finalizar-venta");
+      if (btnFinalizarVenta) {
+        btnFinalizarVenta.addEventListener("click", () => Sales.finalizeSale());
+      }
+
+      // Botón limpiar carrito
+      const btnLimpiarCarrito = document.getElementById("btn-limpiar-carrito");
+      if (btnLimpiarCarrito) {
+        btnLimpiarCarrito.addEventListener("click", () => {
+          if (confirm("¿Desea limpiar el carrito?")) {
+            Sales.clearCart();
+          }
+        });
+      }
 
       // Formulario de clientes
       const formAgregarCliente = document.getElementById("form-cliente");

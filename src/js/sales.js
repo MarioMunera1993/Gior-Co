@@ -1,10 +1,13 @@
 /**
  * MÓDULO DE VENTAS
  * ================
- * Gestiona el registro de ventas via API
+ * Gestiona el registro de ventas via API con soporte para carrito multi-producto
  */
 
 const Sales = {
+  // Carrito temporal (se limpia al finalizar venta)
+  cart: [],
+
   async updateDashboard() {
     try {
       const sales = await Storage.getSales();
@@ -265,6 +268,131 @@ const Sales = {
     } catch (error) {
       console.error("Error al eliminar venta:", error);
       UI.showNotification("Error al eliminar la venta", "error");
+      return false;
+    }
+  },
+
+  // === FUNCIONES DE CARRITO ===
+
+  addToCart(producto, cantidad, precioUnitario) {
+    // Verificar si el producto ya está en el carrito
+    const existingIndex = this.cart.findIndex(item => item.idProducto === producto.id);
+
+    if (existingIndex >= 0) {
+      // Si ya existe, incrementar cantidad
+      this.cart[existingIndex].cantidad += parseInt(cantidad);
+      this.cart[existingIndex].subtotal = this.cart[existingIndex].cantidad * this.cart[existingIndex].precioUnitario;
+    } else {
+      // Agregar nuevo item
+      this.cart.push({
+        idProducto: producto.id,
+        codigo: producto.codigo,
+        nombre: producto.nombre,
+        cantidad: parseInt(cantidad),
+        precioUnitario: parseFloat(precioUnitario),
+        subtotal: parseInt(cantidad) * parseFloat(precioUnitario)
+      });
+    }
+
+    this.renderCart();
+    UI.showNotification(`${producto.nombre} agregado al carrito`, "success");
+  },
+
+  removeFromCart(index) {
+    this.cart.splice(index, 1);
+    this.renderCart();
+    UI.showNotification("Producto eliminado del carrito", "info");
+  },
+
+  renderCart() {
+    const container = document.getElementById('carrito-container');
+    const tbody = document.getElementById('carrito-items');
+    const totalSpan = document.getElementById('carrito-total');
+
+    if (this.cart.length === 0) {
+      container.classList.add('hidden');
+      return;
+    }
+
+    container.classList.remove('hidden');
+    tbody.innerHTML = '';
+
+    this.cart.forEach((item, index) => {
+      const row = tbody.insertRow();
+      row.innerHTML = `
+        <td class="px-4 py-2 text-left text-gray-800 dark:text-white">${item.codigo} - ${item.nombre}</td>
+        <td class="px-4 py-2 text-center text-gray-800 dark:text-white">${item.cantidad}</td>
+        <td class="px-4 py-2 text-right text-gray-800 dark:text-white">${Utils.formatCurrency(item.precioUnitario)}</td>
+        <td class="px-4 py-2 text-right text-gray-800 dark:text-white font-bold">${Utils.formatCurrency(item.subtotal)}</td>
+        <td class="px-4 py-2 text-center">
+          <button onclick="Sales.removeFromCart(${index})" 
+            class="text-red-600 hover:text-red-800 dark:text-red-400 font-bold">
+            ✕
+          </button>
+        </td>
+      `;
+    });
+
+    const total = this.cart.reduce((sum, item) => sum + item.subtotal, 0);
+    totalSpan.textContent = Utils.formatCurrency(total);
+  },
+
+  clearCart() {
+    this.cart = [];
+    this.renderCart();
+  },
+
+  async finalizeSale() {
+    try {
+      if (this.cart.length === 0) {
+        UI.showNotification("El carrito está vacío", "error");
+        return false;
+      }
+
+      const clienteSelect = document.getElementById("venta-cliente");
+      const idCliente = clienteSelect ? clienteSelect.value : null;
+
+      if (!idCliente) {
+        UI.showNotification("Seleccione un cliente antes de finalizar", "error");
+        return false;
+      }
+
+      const vendedor = Auth.getCurrentUser().username;
+
+      // Preparar items para el backend
+      const items = this.cart.map(item => ({
+        idProducto: item.idProducto,
+        cantidad: item.cantidad,
+        precioUnitario: item.precioUnitario
+      }));
+
+      // Enviar al backend
+      const result = await Storage.API.createSale({ items, vendedor, idCliente });
+
+      if (result.error) {
+        UI.showNotification("Error al registrar venta: " + result.error, "error");
+        return false;
+      }
+
+      UI.showNotification(`✅ Venta registrada: ${result.itemsCount} productos`, "success");
+
+      // Limpiar carrito y actualizar UI
+      this.clearCart();
+
+      // Limpiar formulario
+      document.getElementById("form-venta").reset();
+      document.getElementById("venta-fecha").valueAsDate = new Date();
+
+      // Actualizar inventario y tablas
+      if (typeof Inventory !== 'undefined') await Inventory.loadAndRefreshUI();
+      await this.renderSalesTable();
+      await this.updateDashboard();
+
+      return true;
+
+    } catch (error) {
+      console.error("Error al finalizar venta:", error);
+      UI.showNotification("Error al finalizar la venta", "error");
       return false;
     }
   },

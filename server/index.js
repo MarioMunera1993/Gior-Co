@@ -195,46 +195,66 @@ app.get('/api/sales', async (req, res) => {
 
 app.post('/api/sales', async (req, res) => {
     try {
-        const { idProducto, cantidad, precioUnitario, detalle, vendedor, idCliente } = req.body;
-        // El frontend envia 'idProducto' que ahora debe ser el INT de la tabla producto.
+        const { items, vendedor, idCliente } = req.body;
+        // items: [{ idProducto, cantidad, precioUnitario }, ...]
 
-        // Validación de cliente
+        // Validaciones básicas
         if (!idCliente) throw new Error("Cliente es requerido");
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            throw new Error("La venta debe contener al menos un producto");
+        }
 
         const connection = await pool.getConnection();
         await connection.beginTransaction();
 
         try {
-            // 1. Verificar Stock
-            const [stocks] = await connection.query('SELECT cantidadActual FROM stock WHERE idProducto = ?', [idProducto]);
-            if (stocks.length === 0) throw new Error('Producto no encontrado en stock');
-            if (stocks[0].cantidadActual < cantidad) throw new Error('Stock insuficiente');
+            // 1. Verificar Stock de TODOS los productos antes de proceder
+            for (const item of items) {
+                const [stocks] = await connection.query(
+                    'SELECT cantidadActual FROM stock WHERE idProducto = ?',
+                    [item.idProducto]
+                );
+                if (stocks.length === 0) {
+                    throw new Error(`Producto ID ${item.idProducto} no encontrado en stock`);
+                }
+                if (stocks[0].cantidadActual < item.cantidad) {
+                    throw new Error(`Stock insuficiente para producto ID ${item.idProducto}`);
+                }
+            }
 
-            // 2. Crear Venta (Cabecera)
-            const total = cantidad * precioUnitario;
+            // 2. Calcular total de la venta
+            const total = items.reduce((sum, item) => sum + (item.cantidad * item.precioUnitario), 0);
+
+            // 3. Crear Venta (Cabecera)
             const [resVenta] = await connection.query(
                 'INSERT INTO venta (idCliente, total, vendedor) VALUES (?, ?, ?)',
                 [idCliente, total, vendedor]
             );
             const idVenta = resVenta.insertId;
 
-            // 3. Crear Detalle Venta
-            await connection.query(
-                'INSERT INTO detalle_venta (idVenta, idProducto, cantidad, precioUnitario) VALUES (?, ?, ?, ?)',
-                [idVenta, idProducto, cantidad, precioUnitario]
-            );
+            // 4. Para cada producto: crear detalle, actualizar stock y registrar movimiento
+            for (const item of items) {
+                // 4a. Crear Detalle Venta
+                await connection.query(
+                    'INSERT INTO detalle_venta (idVenta, idProducto, cantidad, precioUnitario) VALUES (?, ?, ?, ?)',
+                    [idVenta, item.idProducto, item.cantidad, item.precioUnitario]
+                );
 
-            // 4. Actualizar Stock
-            await connection.query('UPDATE stock SET cantidadActual = cantidadActual - ? WHERE idProducto = ?', [cantidad, idProducto]);
+                // 4b. Actualizar Stock
+                await connection.query(
+                    'UPDATE stock SET cantidadActual = cantidadActual - ? WHERE idProducto = ?',
+                    [item.cantidad, item.idProducto]
+                );
 
-            // 5. Registrar Movimiento (Salida)
-            await connection.query(
-                'INSERT INTO inventario (idProducto, tipoMovimiento, cantidad, referenciaId) VALUES (?, ?, ?, ?)',
-                [idProducto, 'SALIDA', quantidade = cantidad, idVenta]
-            );
+                // 4c. Registrar Movimiento (Salida)
+                await connection.query(
+                    'INSERT INTO inventario (idProducto, tipoMovimiento, cantidad, referenciaId) VALUES (?, ?, ?, ?)',
+                    [item.idProducto, 'SALIDA', item.cantidad, idVenta]
+                );
+            }
 
             await connection.commit();
-            res.json({ message: 'Venta registrada', id: idVenta });
+            res.json({ message: 'Venta registrada exitosamente', id: idVenta, itemsCount: items.length });
 
         } catch (err) {
             await connection.rollback();

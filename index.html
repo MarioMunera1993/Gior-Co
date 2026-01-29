@@ -6,11 +6,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario y Ventas de Ropa</title>
-    
+
     <!-- Librerías externas: Tailwind CSS y Chart.js -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    
+
     <!-- Estilos personalizados -->
     <link rel="stylesheet" href="./src/css/index.css">
 </head>
@@ -382,80 +382,124 @@
             <section class="form-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
                 <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Registrar Nueva Venta</h2>
 
-               <form id="form-venta" class="space-y-4">
+                <form id="form-venta" class="space-y-4">
 
-    <!-- NUEVOS CAMPOS -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-            <label for="venta-fecha"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha</label>
-            <input type="date" id="venta-fecha" required
-                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
-        </div>
+                    <!-- NUEVOS CAMPOS -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="venta-fecha"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha</label>
+                            <input type="date" id="venta-fecha" required
+                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                        </div>
 
-        <div>
-            <label for="venta-cliente"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cliente</label>
-            <select id="venta-cliente" required
-                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
-                <option value="">Seleccione un cliente</option>
-                <option value="consumidor_final">Consumidor Final</option>
-            </select>
-        </div>
-    </div>
+                        <div>
+                            <label for="venta-cliente"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cliente</label>
+                            <select id="venta-cliente" required
+                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                                <option value="">Seleccione un cliente</option>
+                                <option value="consumidor_final">Consumidor Final</option>
+                            </select>
+                        </div>
+                    </div>
 
-    <!-- CAMPOS QUE YA TENÍAS -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-            <label for="venta-producto"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Producto (Código - Nombre)
-            </label>
-            <select id="venta-producto" required
-                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
-                <option value="">Seleccione un producto</option>
-            </select>
-        </div>
+                    <!-- CAMPOS QUE YA TENÍAS -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="venta-producto"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Producto (Código - Nombre)
+                            </label>
+                            <select id="venta-producto" required
+                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                                <option value="">Seleccione un producto</option>
+                            </select>
+                        </div>
 
-        <div>
-            <label for="venta-cantidad"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cantidad</label>
-            <input type="number" id="venta-cantidad" min="1" value="1" required
-                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
-        </div>
+                        <div>
+                            <label for="venta-cantidad"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cantidad</label>
+                            <input type="number" id="venta-cantidad" min="1" value="1" required
+                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                        </div>
 
-        <div>
-            <label for="venta-precio-final"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Precio Unitario Final ($)
-            </label>
-            <input type="number" id="venta-precio-final" min="0" step="0.01" required
-                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
-        </div>
-    </div>
+                        <div>
+                            <label for="venta-precio-final"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Precio Unitario Final ($)
+                            </label>
+                            <input type="number" id="venta-precio-final" min="0" step="0.01" required
+                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                        </div>
+                    </div>
 
-    <div>
-        <label for="venta-detalle"
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Detalle de la Venta (Cliente, Descuento, etc.)
-        </label>
-        <input type="text" id="venta-detalle"
-            placeholder="Ej: Cliente Juan Pérez, 10% descuento"
-            class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
-    </div>
+                    <div>
+                        <label for="venta-detalle" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Detalle/Observaciones
+                        </label>
+                        <input type="text" id="venta-detalle" placeholder="Ej: Descuento aplicado, promoción, etc."
+                            class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    </div>
 
-    <!-- CAMPOS OCULTOS PARA LA BD -->
-    <input type="hidden" id="venta-id-producto">
-    <input type="hidden" id="venta-cantidad-venta">
-    <input type="hidden" id="venta-valor-venta">
+                    <!-- CAMPOS OCULTOS PARA LA BD -->
+                    <input type="hidden" id="venta-id-producto">
+                    <input type="hidden" id="venta-cantidad-venta">
+                    <input type="hidden" id="venta-valor-venta">
 
-    <div class="pt-2">
-        <button type="submit"
-            class="w-full py-2 px-4 rounded-md shadow-md text-white bg-emerald-600 hover:bg-emerald-700 transition">
-            Confirmar Venta y Descontar Stock
-        </button>
-    </div>
-</form>
+                    <div class="flex gap-4">
+                        <button type="button" id="btn-agregar-carrito"
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">
+                            🛒 Agregar al Carrito
+                        </button>
+                    </div>
+                </form>
+
+                <!-- CARRITO TEMPORAL -->
+                <div id="carrito-container" class="mt-6 hidden">
+                    <h3 class="text-lg font-bold mb-3 text-gray-800 dark:text-white">Carrito de Venta</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                            <thead class="bg-gray-50 dark:bg-gray-600">
+                                <tr>
+                                    <th
+                                        class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                                        Producto</th>
+                                    <th
+                                        class="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                                        Cantidad</th>
+                                    <th
+                                        class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                                        Precio Unit.</th>
+                                    <th
+                                        class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                                        Subtotal</th>
+                                    <th
+                                        class="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                                        Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="carrito-items"
+                                class="bg-white dark:bg-gray-700 divide-y divide-gray-200 dark:divide-gray-600">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center">
+                        <div class="text-xl font-bold text-gray-800 dark:text-white">
+                            Total: <span id="carrito-total">$0.00</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="button" id="btn-limpiar-carrito"
+                                class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
+                                Limpiar Carrito
+                            </button>
+                            <button type="button" id="btn-finalizar-venta"
+                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition shadow-md">
+                                ✅ Finalizar Venta
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
             </section>
 
@@ -545,7 +589,8 @@
                 </div>
             </section>
 
-            <section id="add-customer-section" class="form-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
+            <section id="add-customer-section"
+                class="form-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
                 <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Agregar Cliente</h2>
                 <form id="form-cliente" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <input type="text" id="customer-primer-apellido" required placeholder="Primer Apellido"
@@ -616,7 +661,8 @@
                 </div>
             </section>
 
-            <section id="add-supplier-section" class="form-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
+            <section id="add-supplier-section"
+                class="form-container bg-white dark:bg-gray-700 p-6 rounded-xl shadow-lg">
                 <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Agregar Proveedor</h2>
                 <form id="form-proveedor" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <input type="text" id="supplier-razon-social" required placeholder="Razón Social"
@@ -651,7 +697,8 @@
 
             <section class="filters-container bg-white dark:bg-gray-700 p-4 rounded-xl shadow-lg">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <input type="text" id="buscar-proveedores" placeholder="Buscar por razón social, identificación o correo..."
+                    <input type="text" id="buscar-proveedores"
+                        placeholder="Buscar por razón social, identificación o correo..."
                         class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
                     <button id="limpiar-filtros-proveedores"
                         class="py-2 rounded-md shadow-md font-semibold transition duration-200 bg-gray-600 hover:bg-gray-700 text-white">
@@ -722,7 +769,8 @@
                     </div>
                     <div>
                         <label for="edit-supplier-tipo-identificacion"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Identificación</label>
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de
+                            Identificación</label>
                         <select id="edit-supplier-tipo-identificacion" required
                             class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
                             <option>RUT</option>
@@ -752,7 +800,8 @@
                     </div>
                     <div>
                         <label for="edit-supplier-nombre-contacto"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre del Contacto</label>
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre del
+                            Contacto</label>
                         <input type="text" id="edit-supplier-nombre-contacto" required
                             class="mt-1 w-full p-3 border rounded-lg shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500">
                     </div>
@@ -850,12 +899,12 @@
     <script src="./src/js/app-state.js"></script>
     <script src="./src/js/storage.js"></script>
     <script src="./src/js/utils.js"></script>
-    
+
     <!-- Validators -->
     <script src="./src/js/validators/input.js"></script>
     <script src="./src/js/validators/customer.js"></script>
     <script src="./src/js/validators/supplier.js"></script>
-    
+
     <!-- Feature modules -->
     <script src="./src/js/auth.js"></script>
     <script src="./src/js/ui.js"></script>
@@ -864,13 +913,13 @@
     <script src="./src/js/customers.js"></script>
     <script src="./src/js/suppliers.js"></script>
     <script src="./src/js/charts.js"></script>
-    
+
     <!-- Event handlers -->
     <script src="./src/js/events.js"></script>
-    
+
     <!-- Main application -->
     <script src="./src/js/app.js"></script>
 
 </body>
-</html>
 
+</html>
