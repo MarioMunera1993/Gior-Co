@@ -9,8 +9,12 @@
 
 const InputValidator = {
   // Validar producto
-  validateProduct(codigo, nombre, talla, color, cantidad, precio) {
+  validateProduct(codigo, nombre, talla, color, cantidad, precio, tipoProducto) {
     const errors = [];
+
+    if (!tipoProducto || tipoProducto === "") {
+      errors.push("El tipo de producto es requerido");
+    }
 
     if (!codigo || codigo.trim() === "") {
       errors.push("El código del producto es requerido");

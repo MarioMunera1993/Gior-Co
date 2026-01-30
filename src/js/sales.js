@@ -11,12 +11,18 @@ const Sales = {
   async updateDashboard() {
     try {
       const sales = await Storage.getSales();
-      let totalVentas = sales.reduce((sum, sale) => sum + sale.cantidad, 0);
+
+      // Agrupar ventas por idVenta para contar facturas únicas
+      const uniqueSales = [...new Set(sales.map(s => s.idVenta))];
+      let totalVentas = uniqueSales.length;
+
       let totalIngreso = sales.reduce((sum, sale) => sum + parseFloat(sale.totalVenta), 0);
 
       const today = new Date().toISOString().split("T")[0];
       const salesToday = sales.filter((sale) => sale.fecha.startsWith(today));
-      let totalVentasHoy = salesToday.reduce((sum, sale) => sum + sale.cantidad, 0);
+      const uniqueSalesToday = [...new Set(salesToday.map(s => s.idVenta))];
+
+      let totalVentasHoy = uniqueSalesToday.length;
       let totalIngresoHoy = salesToday.reduce((sum, sale) => sum + parseFloat(sale.totalVenta), 0);
 
       if (document.getElementById("stat-ventas-total")) document.getElementById("stat-ventas-total").textContent = totalVentas;
@@ -25,6 +31,90 @@ const Sales = {
       if (document.getElementById("stat-ingreso-hoy")) document.getElementById("stat-ingreso-hoy").textContent = Utils.formatCurrency(totalIngresoHoy);
     } catch (error) {
       console.error("Error al actualizar dashboard de ventas:", error);
+    }
+  },
+
+  async renderSalesTable() {
+    try {
+      const tbody = document.getElementById("tabla-ventas").querySelector("tbody");
+      if (!tbody) return;
+
+      const sales = await Storage.getSales();
+
+      // Agrupar ventas por idVenta
+      const salesByInvoice = {};
+      sales.forEach(sale => {
+        if (!salesByInvoice[sale.idVenta]) {
+          salesByInvoice[sale.idVenta] = {
+            idVenta: sale.idVenta,
+            fecha: sale.fecha,
+            vendedor: sale.vendedor,
+            detalle: sale.detalle,
+            items: [],
+            total: 0
+          };
+        }
+        salesByInvoice[sale.idVenta].items.push(sale);
+        salesByInvoice[sale.idVenta].total += parseFloat(sale.totalVenta);
+      });
+
+      // Convertir a array y ordenar
+      const sortedSales = Object.values(salesByInvoice).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+      tbody.innerHTML = "";
+      const isAdmin = Auth.isAdmin();
+
+      sortedSales.forEach((sale) => {
+        const row = tbody.insertRow();
+        row.className = "hover:bg-gray-50 dark:hover:bg-gray-600 transition duration-150 align-top";
+
+        // Fecha
+        row.insertCell().innerHTML = `<div class="font-bold text-gray-900 dark:text-white">#${sale.idVenta}</div><div class="text-xs text-gray-500">${Utils.formatDate(sale.fecha)}</div>`;
+
+        // Productos (Resumen)
+        const itemsList = sale.items.map(item =>
+          `<div class="text-sm"><span class="font-semibold">${item.cantidad}x</span> ${item.nombreProducto} (${item.codigoProducto})</div>`
+        ).join('');
+
+        row.insertCell().innerHTML = `
+          <div class="text-gray-900 dark:text-white">${itemsList}</div>
+          <div class="text-xs text-gray-500 mt-1">Vendedor: ${sale.vendedor}</div>
+        `;
+
+        // Cantidad total de items
+        const totalItems = sale.items.reduce((acc, item) => acc + item.cantidad, 0);
+        const cantidadCell = row.insertCell();
+        cantidadCell.className = "text-center";
+        cantidadCell.innerHTML = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">${totalItems} items</span>`;
+
+        // Precio Unitario (No aplica en venta agrupada, dejamos vacío o promedio)
+        row.insertCell().innerHTML = "-";
+
+        // Total Venta
+        row.insertCell().innerHTML = `<div class="font-bold text-gray-900 dark:text-white">${Utils.formatCurrency(sale.total)}</div>`;
+
+        // Detalle
+        row.insertCell().innerHTML = sale.detalle || "-";
+
+        // Acciones
+        const actionsCell = row.insertCell();
+        actionsCell.className = "px-6 py-4 whitespace-nowrap text-center";
+        actionsCell.setAttribute("data-label", "Acciones");
+
+        if (isAdmin) {
+          actionsCell.style.display = "table-cell";
+          actionsCell.innerHTML = `
+            <button onclick="Sales.deleteSale('${sale.idVenta}')" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 transition" title="Eliminar Venta Completa">
+              Eliminar
+            </button>
+          `;
+        } else {
+          actionsCell.style.display = "none";
+        }
+      });
+    } catch (error) {
+      console.error("Error al renderizar tabla de ventas:", error);
+      UI.showNotification("Error al mostrar ventas", "error");
     }
   },
 
@@ -56,6 +146,12 @@ const Sales = {
       select.onchange = this.handleProductChange; // Referencia a la funcion manejadora
 
       // Check initial Value logic if needed
+      // Asegurar fecha actual
+      const dateInput = document.getElementById("venta-fecha");
+      if (dateInput) {
+        dateInput.valueAsDate = new Date();
+      }
+
     } catch (error) {
       console.error("Error al poblar selector de productos:", error);
     }
@@ -85,21 +181,29 @@ const Sales = {
 
   async handleProductChange(e) {
     const selectedValue = e.target.value;
+    console.log("Selected Value:", selectedValue);
     const productId = selectedValue ? selectedValue.split("|")[0] : null;
+    console.log("Extracted ProductID:", productId);
     await Sales.updateSaleFormPrice(productId);
   },
 
   async updateSaleFormPrice(productId) {
+    console.log("Updating price for ID:", productId);
     if (!productId) {
       document.getElementById("venta-precio-final").value = "";
       return;
     }
-    const inventory = await Storage.getInventory(); // Esto podría ser ineficiente (fetch cada vez), pero seguro.
-    const product = inventory.find((p) => p.id === productId);
+    const inventory = await Storage.getInventory();
+    console.log("Inventory loaded, size:", inventory.length);
+
+    // Debug: ver si encontramos algo
+    const product = inventory.find((p) => String(p.id) === String(productId));
+    console.log("Product found:", product);
+
     const priceInput = document.getElementById("venta-precio-final");
 
     if (product) {
-      priceInput.value = product.precio.toFixed(2);
+      priceInput.value = product.precio ? parseFloat(product.precio).toFixed(2) : "0";
     } else {
       priceInput.value = "";
     }

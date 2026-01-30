@@ -111,6 +111,29 @@ const Storage = {
     console.warn("Storage.saveSuppliers está obsoleto con MySQL.");
   },
 
+  // Catálogos
+  async getProductTypes() {
+    try {
+      const response = await fetch(`${API_URL}/product-types`);
+      if (!response.ok) throw new Error('Error de red');
+      return await response.json();
+    } catch (error) {
+      console.error("Error al obtener tipos de producto:", error);
+      return [];
+    }
+  },
+
+  async getSizes() {
+    try {
+      const response = await fetch(`${API_URL}/sizes`);
+      if (!response.ok) throw new Error('Error de red');
+      return await response.json();
+    } catch (error) {
+      console.error("Error al obtener tallas:", error);
+      return [];
+    }
+  },
+
   // Helpers para llamadas API directas (que reemplazarán a los .push y save... masivos)
   API: {
     // Inventory

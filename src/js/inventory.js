@@ -10,6 +10,10 @@ const Inventory = {
       const inventory = await Storage.getInventory();
       this.updateStats(inventory);
       this.applyFiltersAndRender(inventory);
+
+      // Populate catalogs (async but don't block UI render)
+      this.populateCatalogs();
+
       if (typeof Sales !== 'undefined' && Sales.populateProductSelect) {
         // Sales.populateProductSelect() necesitará refactorización también, pasamos inventory o lo dejamos para que Sales lo pida
         // Por eficiencia, podríamos pasarlo, pero para desacoplar, dejemos que Sales lo pida (aunque sea otra llamada)
@@ -24,6 +28,65 @@ const Inventory = {
       }
     } catch (error) {
       console.error("Error loading inventory UI:", error);
+    }
+  },
+
+  async populateCatalogs() {
+    try {
+      // Fetch data
+      const [types, sizes] = await Promise.all([
+        Storage.getProductTypes(),
+        Storage.getSizes()
+      ]);
+
+      // Populate Type Select
+      const typeSelect = document.getElementById("tipo-producto");
+      if (typeSelect) {
+        // Keep first option (placeholder)
+        const placeholder = typeSelect.options[0];
+        typeSelect.innerHTML = "";
+        typeSelect.appendChild(placeholder);
+
+        types.forEach(type => {
+          const option = document.createElement("option");
+          option.value = type.id;
+          option.textContent = type.nombre;
+          typeSelect.appendChild(option);
+        });
+      }
+
+      // Populate Size Select (Create Product)
+      const sizeSelect = document.getElementById("talla");
+      if (sizeSelect) {
+        const placeholder = sizeSelect.options[0];
+        sizeSelect.innerHTML = "";
+        sizeSelect.appendChild(placeholder);
+
+        sizes.forEach(size => {
+          const option = document.createElement("option");
+          option.value = size.id;
+          option.textContent = size.nombre;
+          sizeSelect.appendChild(option);
+        });
+      }
+
+      // Populate Size Select (Filter)
+      const filterSizeSelect = document.getElementById("filtro-talla");
+      if (filterSizeSelect) {
+        const placeholder = filterSizeSelect.options[0];
+        filterSizeSelect.innerHTML = "";
+        filterSizeSelect.appendChild(placeholder);
+
+        sizes.forEach(size => {
+          const option = document.createElement("option");
+          option.value = size.nombre; // Filter uses name, not ID usually for display, check applyFiltersAndRender logic
+          option.textContent = size.nombre;
+          filterSizeSelect.appendChild(option);
+        });
+      }
+
+    } catch (error) {
+      console.error("Error populating catalogs:", error);
     }
   },
 
@@ -147,14 +210,14 @@ const Inventory = {
     }
   },
 
-  async addProduct(codigo, nombre, talla, color, cantidad, precio) {
+  async addProduct(codigo, nombre, talla, color, cantidad, precio, tipoProducto) {
     if (!Auth.isAdmin()) {
       UI.showNotification("Permiso denegado. Solo Administradores.", "error");
       return false;
     }
 
     // Validación
-    const validation = InputValidator.validateProduct(codigo, nombre, talla, color, cantidad, precio);
+    const validation = InputValidator.validateProduct(codigo, nombre, talla, color, cantidad, precio, tipoProducto);
     if (!validation.isValid) {
       validation.errors.forEach((error) => UI.showNotification(error, "error"));
       return false;
@@ -167,9 +230,10 @@ const Inventory = {
       id: Utils.generateId(), // We can generate ID locally or let DB do it. 
       // Our DB schema has VARCHAR(50) for id, let's keep generating it client side for consistency with current logic
       // OR better, send it.
+      idTipoProducto: tipoProducto, // ID from select
       codigo: codigo.trim(),
       nombre: nombre.trim(),
-      talla: talla,
+      idTalla: talla, // ID from select
       color: color.trim(),
       cantidad: parseInt(cantidad),
       precio: parseFloat(precio),

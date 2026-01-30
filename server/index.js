@@ -52,33 +52,40 @@ app.get('/api/inventory', async (req, res) => {
     }
 });
 
+// --- CATÁLOGOS ---
+app.get('/api/product-types', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT idTipoProducto as id, nombre FROM tipo_producto ORDER BY nombre');
+        res.json(rows);
+    } catch (error) {
+        console.error('Error GET /product-types:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/sizes', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT idTalla as id, nombre FROM talla ORDER BY idTalla');
+        res.json(rows);
+    } catch (error) {
+        console.error('Error GET /sizes:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.post('/api/inventory', async (req, res) => {
     try {
-        const { codigo, nombre, talla, color, cantidad, precio } = req.body;
+        const { codigo, nombre, idTalla, color, cantidad, precio, idTipoProducto } = req.body;
         // frontend envia 'nombre' que es descripcion
 
         const connection = await pool.getConnection();
         await connection.beginTransaction();
 
         try {
-            // 1. Buscar o Crear ID Talla
-            let idTalla = null;
-            const [tallas] = await connection.query('SELECT idTalla FROM talla WHERE nombre = ?', [talla]);
-            if (tallas.length > 0) {
-                idTalla = tallas[0].idTalla;
-            } else {
-                const [resTalla] = await connection.query('INSERT INTO talla (nombre) VALUES (?)', [talla]);
-                idTalla = resTalla.insertId;
-            }
-
-            // 2. Buscar o Crear ID Tipo Producto (Por defecto 'Genérico' si no se especifica, aquí asumiremos 'Ropa' o inferencia simple)
-            // Para esta demo, asignamos al primer tipo disponible o creamos uno
-            let idTipo = 1; // Default
-
             // 3. Insertar Producto
             const [resProd] = await connection.query(
                 'INSERT INTO producto (codigo, idTipoProducto, descripcion, color, idTalla, precio) VALUES (?, ?, ?, ?, ?, ?)',
-                [codigo, idTipo, nombre, color, idTalla, precio]
+                [codigo, idTipoProducto, nombre, color, idTalla, precio]
             );
             const idProducto = resProd.insertId;
 
@@ -170,6 +177,7 @@ app.get('/api/sales', async (req, res) => {
         // JOIN para obtener nombres y códigos
         const query = `
             SELECT 
+                v.idVenta, -- ID de la FACTURA
                 dv.idDetalleVenta as id, -- ID unico del renglon
                 v.fechaVenta as fecha,
                 p.codigo as codigoProducto,
@@ -266,6 +274,57 @@ app.post('/api/sales', async (req, res) => {
     } catch (error) {
         console.error('Error POST /sales:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/api/sales/:id', async (req, res) => {
+    const { id } = req.params; // ID de la VENTA (Factura)
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    try {
+        // 1. Obtener todos los items de la venta para revertir stock
+        const [items] = await connection.query(
+            'SELECT idProducto, cantidad FROM detalle_venta WHERE idVenta = ?',
+            [id]
+        );
+
+        if (items.length === 0) {
+            const [venta] = await connection.query('SELECT idVenta FROM venta WHERE idVenta = ?', [id]);
+            if (venta.length === 0) {
+                // Si no existe la venta, devolvemos 404
+                throw new Error("Venta no encontrada");
+            }
+        }
+
+        // 2. Revertir Stock y borrar movimientos
+        for (const item of items) {
+            // Devolver stock
+            await connection.query(
+                'UPDATE stock SET cantidadActual = cantidadActual + ? WHERE idProducto = ?',
+                [item.cantidad, item.idProducto]
+            );
+
+            // Registrar movimiento de reversión
+            await connection.query(
+                'INSERT INTO inventario (idProducto, tipoMovimiento, cantidad, referenciaId) VALUES (?, ?, ?, ?)',
+                [item.idProducto, 'ENTRADA (ANULACION)', item.cantidad, id]
+            );
+        }
+
+        // 3. Borrar Venta (Cascade borrará detalles)
+        await connection.query('DELETE FROM detalle_venta WHERE idVenta = ?', [id]);
+        await connection.query('DELETE FROM venta WHERE idVenta = ?', [id]);
+
+        await connection.commit();
+        res.json({ message: 'Venta eliminada y stock revertido correctamente' });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error('Error DELETE /sales:', error);
+        res.status(500).json({ error: error.message });
+    } finally {
+        connection.release();
     }
 });
 

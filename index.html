@@ -151,7 +151,7 @@
                         class="dot w-4 h-4 rounded-full bg-blue-500 dark:bg-yellow-400 mr-2 transition-all duration-300"></span>
                     <span id="dark-mode-label" class="text-sm font-medium text-gray-700 dark:text-gray-300">Dark</span>
                 </div>
-                <button onclick="showLoginModal()"
+                <button id="logout-btn"
                     class="py-1 px-3 bg-gray-200 dark:bg-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 transition">
                     Cerrar Sesión
                 </button>
@@ -238,36 +238,13 @@
                         class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
                     <input type="text" id="nombre" required placeholder="Nombre"
                         class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <select id="tipo-producto" required
+                        class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                        <option value="">Tipo de Producto</option>
+                    </select>
                     <select id="talla" required
                         class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
                         <option value="">Talla</option>
-                        <optgroup label="Ropa">
-                            <option>XS</option>
-                            <option>S</option>
-                            <option>M</option>
-                            <option>L</option>
-                            <option>XL</option>
-                            <option>U</option>
-                        </optgroup>
-                        <optgroup label="Calzado (EU)">
-                            <option>32</option>
-                            <option>33</option>
-                            <option>34</option>
-                            <option>35</option>
-                            <option>36</option>
-                            <option>37</option>
-                            <option>38</option>
-                            <option>39</option>
-                            <option>40</option>
-                            <option>41</option>
-                            <option>42</option>
-                            <option>43</option>
-                            <option>44</option>
-                            <option>45</option>
-                            <option>46</option>
-                            <option>47</option>
-                            <option>48</option>
-                        </optgroup>
                     </select>
                     <input type="text" id="color" required placeholder="Color"
                         class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
@@ -295,33 +272,6 @@
                     <select id="filtro-talla"
                         class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
                         <option value="">Talla</option>
-                        <optgroup label="Ropa">
-                            <option value="XS">XS</option>
-                            <option value="S">S</option>
-                            <option value="M">M</option>
-                            <option value="L">L</option>
-                            <option value="XL">XL</option>
-                            <option value="U">U</option>
-                        </optgroup>
-                        <optgroup label="Calzado (EU)">
-                            <option value="32">32</option>
-                            <option value="33">33</option>
-                            <option value="34">34</option>
-                            <option value="35">35</option>
-                            <option value="36">36</option>
-                            <option value="37">37</option>
-                            <option value="38">38</option>
-                            <option value="39">39</option>
-                            <option value="40">40</option>
-                            <option value="41">41</option>
-                            <option value="42">42</option>
-                            <option value="43">43</option>
-                            <option value="44">44</option>
-                            <option value="45">45</option>
-                            <option value="46">46</option>
-                            <option value="47">47</option>
-                            <option value="48">48</option>
-                        </optgroup>
                     </select>
                     <input type="text" id="filtro-color" placeholder="Color"
                         class="p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500" />
@@ -389,8 +339,8 @@
                         <div>
                             <label for="venta-fecha"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha</label>
-                            <input type="date" id="venta-fecha" required
-                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                            <input type="date" id="venta-fecha" readonly
+                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 dark:text-white dark:border-gray-500 cursor-not-allowed">
                         </div>
 
                         <div>
@@ -429,8 +379,8 @@
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Precio Unitario Final ($)
                             </label>
-                            <input type="number" id="venta-precio-final" min="0" step="0.01" required
-                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-50 dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                            <input type="number" id="venta-precio-final" min="0" step="0.01" readonly
+                                class="mt-1 w-full p-2 border rounded-md shadow-sm bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-500 cursor-not-allowed">
                         </div>
                     </div>
 

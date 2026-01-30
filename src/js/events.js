@@ -50,8 +50,9 @@ const Events = {
     const color = document.getElementById("color").value.trim();
     const cantidad = document.getElementById("cantidad").value;
     const precio = document.getElementById("precio").value;
+    const tipoProducto = document.getElementById("tipo-producto").value;
 
-    if (Inventory.addProduct(codigo, nombre, talla, color, cantidad, precio)) {
+    if (Inventory.addProduct(codigo, nombre, talla, color, cantidad, precio, tipoProducto)) {
       e.target.reset();
       Inventory.loadAndRefreshUI();
     }
